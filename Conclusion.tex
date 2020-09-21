@@ -1,0 +1,24 @@
+\chapter{Conclusiones y trabajo futuro}
+\label{chp:conclusion}
+En este trabajo, se pueden ver a los finalistas del concurso AES, cuyas ideas fueron basadas en copcentos simples pero no por ello menos potentes. Tanto es así, que superan fácilmente las expectativas de un sistema criptográfico de su tamaño de bloque tanto por la parte lineal como diferencial.
+
+No obstante, se aprecia que el estándar actual no presenta la mayor fortaleza debido a que su filosofía se centró principalmente en la eficiencia, labor que cumple perfectamente.
+
+También es destacable que \textit{Serpent} presenta una gran fortaleza y una rápida eficiencia en sistemas con suficientes recursos y capacidad para trabajar en paralelo, lo que justifica su baja tasa de negativos.
+
+Por otro lado, se observo que \textit{MARS}, siguiendo los pasos de \textit{DES}, optó por tener una gran fortaleza pero una filosofía de diseño difícil de entender y algo lenta.
+
+Mientras que \textit{Twofish} mostraba sencillez y eficiencia en su diseño dejando la robustez del algoritmo sobre recursos más sofisticados teóricamente pero que se traducían en instrucciones sencillas a nivel de implementación: $S-boxes$ dependientes de la clave, MDS y PHT.
+
+Finalmente, \textit{RC6} opta por la utilización de la multiplicación para su función cuadrática, que no es una operación sencilla, y la rotación dependiente del mensaje.
+
+A partir de este trabajo, existen varias vías que se podrían explorar en el futuro:
+\begin{itemize}
+\item Como hemos visto a los finalistas, su continuación natural es compararlos con algunos algoritmos que fuesen descartados en la primera ronda y así comprobar efectivamente la fortaleza de los finalistas.
+
+\item Volviendo un poco atrás respecto a los sucesos de este trabajo, podría ser interesante también comparar al \textit{DES} con las alternativas que surgieron antes del \textit{AES process}, así como \textit{FEAL} (el cuál nombré de pasada), \textit{Triple DES}, \textit{IDEA}, \textit{Blowfish} (predecesor de \textit{Twofish}), \textit{RC5} (predecesor de \textit{RC6}), donde se puede estudiar también el ataque \textit{meet-in-the-middle} que rompió algunos de los anteriores y dio comienzo al \textit{key-whitening}. Incluso se puede centrar un trabajo específicamente en el estudio de la familia de los sistemas criptográficos \textit{RC}.
+
+\item Por otro lado, se podría estudiar de forma análoga la competición realizada por el \textit{NIST} entre 2007 y 2012 que buscaba esta vez un función hash estándar, que se llamaría \textit{SHA-3} (\textit{Secure Hash Algorithm 3}) que curiosamente tuvo como ganador el algoritmo del equipo en el que estaba Joan Daemen.
+
+\item Por último, y alejándonos un poco más de este trabajo, una vez visto cómo los sistemas criptográficos resisten ataques enfocados a sus algoritmos, se podría hacer una documentación sobre los ataques enfocados hacia los usuarios. Estos ataques son utilizados habitualmente en la red para interceptar mensajes, claves o para modificar criptogramas antes de llegar a su destinatario mediante técnicas como \textit{man-in-the-middle} o \textit{phising}. Aunque este trabajo, desde mi punto de vista puede ser difícil de enfocar desde una perspectiva matemática pero sencillo desde una informática, prestándose incluso a colaboración con un estudiante de psicología.
+\end{itemize}

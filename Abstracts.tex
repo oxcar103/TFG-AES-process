@@ -1,0 +1,53 @@
+\begin{abstract}
+	En este trabajo, se realiza un estudio sobre algunos de los algoritmos que compitieron por convertirse en AES (Advandced Encryptation Standard), por lo que previamente se exponen las principales técnincas del criptoanálisis, que serán las que se comprobarán en cada algoritmo. En particular, se verá una pequeña introducción a la motivación del concurso, así como el resumen de su desarrollo donde se buscó sustituto para el DES, que era el éstandar anterior. Los finalistas fueron: Rijndael, que fue el ganador del concurso; Serpent, fue subcampeón y obtuvo además el menor número de votos negativos; Twofish, que fue una mejora de Blowfish; RC6, de la familia Rivest Cipher desarrollada por RSA Security Inc.; y MARS, desarrollado por IBM, los mismos que dieron a conocer al DES. Para cada candidato, se empieza sentando las bases matemáticas de su robustez y el diseño de su algoritmo, se continúa con sus fortalezas y debilidades, y se termina enumerando conocidas librerías, aplicaciones, empresas o protocolos que lo utilizan en la actualidad.
+	
+	\medskip
+	\noindent\emph{Palabras clave:} Criptografía, Cifrado simétrico, Redes de Feistel, Redes de sustitución-permutación, Cuerpos de Galois, DES, AES, Serpent, MARS, RC6, Twofish
+\end{abstract}
+\pagebreak
+
+
+\renewcommand{\abstractname}{Extended Summary}
+\begin{abstract}
+	Nowadays, communication methods integrate different encryption protocols to allow us to have privacy in such a globalized world. However, those protocols have not always existed, they were proposed, tested and approved. They have also changed over time because something that was considered safe years ago, it does not have to be now.
+	
+	That happened to the previous symmetric block encryption standard, called Data Encryptation Standard (DES), which was developed as one of the best cryptographic systems in history but the advance of technology made it weak. As a result, many other algorithms appeared to try to replace it but, despite being better than it, difference was not big enough. Then, the National Institute of Standards and Technology of the United States proclaimed in 1997 a process to look for the algorithm that would become the new standard of block symmetric encryption.
+	
+	The conditions to participate in it demanded that the new standard have the strengths of DES and be able to overcome the weaknesses that it had. Mainly, they requested that the new algorithm was resistant to cryptanalysis, easy to implement and efficient even in devices with very few resources, and it also needed to be in the public domain in order to be implemented in any device.
+	
+	A total of fifteen designs were submitted to this process, so it was necessary to reduce the list to be able to study them in depth. This was how a second round was made with five finalist algorithms: Rijndael, who was the winner of the contest; Serpent, was runner-up and also obtained the lowest number of negative votes; Twofish, which was an improvement on Blowfish; RC6, from the Rivest Cipher family developed by RSA Security Inc.; and MARS, developed by IBM, the same ones that create DES.
+	
+	Although in 2001, Rijndael became the new standard, known as Advanced Encryptation Standard (AES), the strength of the others against the known cryptographic techniques was also exploited by a part of the developers.
+	
+	In order to understand the algorithms documented in that paper, we will begin by reviewing the necessary concepts in the field of cryptography in general and the particular mathematical and computer bases that each of the algorithms have. Among the basic concepts explained in this paper are the basic terms of plaintext, cyphertext, key and round key but also two of the most important properties of cryptanalysis are explained, the properties of confusion and diffusion which were identified by Claude Elwood Shannon.
+	
+	These properties basically tell us that each bit of the cyphertext must be formed from most of the plaintext bits and also must be related to the key in an inseparable way. That is why cryptanalysis techniques focus their efforts on discovering the relationship between the ciphertext and the key used for its creation.
+	
+	Due to the fact that the algorithms we are going to study are based on only two types of networks, we will only see these ways to design a cryptographic system, but there are many more with very interesting properties.
+	
+	In particular, one of the networks that we will see is Feistel network, used for the first time by Horst Feistel and Don Coppersmith in IBM's Lucifer cipher, a predecessor of DES and we will see them in MARS, descendant of DES because it was developed by the same company and part of the original development team.
+	
+	The other one is the substitution-permutation network. In that network a substitution box and a permutation box are used, usually noted as S-box and P-box, respectively. It should also be noted that they are not exclusive to this kind of networks because DES itself is an algorithm based on Feistel networks that uses S-boxes to enhance its diffusion.
+	
+	We will take some time to understand the cryptographic techniques called linear cryptanalysis and differential cryptanalysis, showing their mechanics as much as possible with examples. We will make a small mention of the existence of differential-linear cryptanalysis, as well as the attack of brute force that was the one that managed to break DES, and why it is no longer a problem.
+	
+	We will take a peek at modes of operation which allows us transform any message into block with an appropriate size. Starting by Electronic Code Book, continuing by Cipher Block Chaining and finishing with 3 modes that simulate a stream cypher: Output FeedBack, Cipher FeedBack y Counter.
+	
+	We will justify the requirements requested by the National Institute of Standards and Technology for participation in the process mentioned above, as well as comment the development it took.
+	
+	Rijndael and Serpent were based on a substitution-permutation network, MARS and Twofish were based on a Feistel network and RC6 took part of its inspiration in a Feistel network but it changed some points. One characteristic that algorithms based on substitution-permutation networks have presented is that their last round differs from the rest of them.
+	
+	When studying the Rijndael algorithm we can observe that it has a very fragmented structure, that allows an easy understanding of it and the visualization of improvements in its optimization when it is implemented. In addition, it stands out for having a mathematical basis in Galois Theory, which uses to speed up almost half of its code through the product and the module of polynomials in a Galois Field. It is also interesting to know that, compared with the others, its security margin against future advances in cryptography is too low. On the other hand, it is very powerful in efficiency in devices with fewer resources, which allowed it to spread easily.
+	
+	When we observe the Serpent algorithm, it stands out providing a high security margin via the use of simple operations such as the displacement of bits with and without rotation. It is also worthwhile the fact that it was designed to work perfectly in parallel, making the multitude of rounds it contains, not too much trouble. However, it finds a problem if the device does not have enough RAM, because it requires a large amount to store the round keys. From the security point of view, it would be resistant to the known cryptographic attacks with half of the rounds. That means that, theoretically, it could run half of rounds and still be strong against cryptographic attacks.
+	
+	MARS was a great surprise during the AES contest, because its complex and hard to understand algorithm was not expected to pass the first round. However, its cryptographic core is so strong that the security margin it provides allowed it to be a finalist. Despite its strength against cryptographic attacks, it is currently rarely used, because it is considered to be inelegant and unwieldy.
+	
+	The Twofish algorithm gave a breath of fresh air by using new techniques that are simple to implement them on any device while maintaining high performance in safety and efficiency.
+	
+	On the other hand, RC6 bet for taking advantage of the efficiency of some instructions such as multiplication in the new processors. In addition, it adapted the structure of its predecessor RC5 to the conditions requested by the Advanced Encryptation Standard process.
+	
+	\medskip
+	\noindent\emph{Key words:} Cryptography, Symmetric cipher, Feistel network, substitution-permutation network, Galois fields, DES AES, Serpent, MARS, RC6, Twofish
+\end{abstract}
+\pagebreak

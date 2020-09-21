@@ -1,0 +1,89 @@
+\chapter{Introducción}
+\label{chp:intro}
+\section{Contexto del trabajo}
+Debido a las debilidades criptográficas encontradas en el \textit{Data Encryptation Standard} (\textbf{DES}), principalmente residentes en la longitud de la clave, surgió la necesidad de buscar una mejor forma de cifrado. Inicialmente, se palió con la utilización del propio DES reiteradas veces sobre un mismo mensaje con distintas claves pero su eficiencia se reducía bastante, por lo que no fue una solución satisfactoria.
+
+La búsqueda de un nuevo estándar comenzó así en enero de 1997, cuando el \textit{National Institute of Standards and Technology} (\textbf{NIST}) de los Estados Unidos anunció lo que se conoce como \textit{Advanced Encryptation Standard process} donde se realizaba un concurso público en el cuál se requería que el algoritmo fuese accesible públicamente, de dominio público globalmente, de llave simétrica y con tamaño de bloque fijo de 128 bits mientras que el tamaño de la llave debía ser tanto de 128 bits como de 192 y 256 bits.
+
+
+\section{Descripción del problema}
+
+La criptografía es el arte o ciencia del secreto, tratando de comunicar de forma segura un mensaje a través de canales inseguros \cite{Art_of_Secrecy}. Actualmente, nuestras vías de comunicación integran diferentes protocolos de encriptación para permitirnos mantener dicha privacidad. Sin embargo, esos protocolos no siempre existieron, fueron propuestos, probados y, en algunos casos, rechazados y en otros aprobados. Y, por supuesto, los estándares que en una época considerábamos suficientemente seguros ya no lo son. Como es el caso del conocido cifrado de César.
+
+En este trabajo nos centraremos en lo que ocurrió cuando el estándar de cifrado simétrico por bloques DES fue calificado como poco seguro, que se debió a los avances tecnológicos que hubo, y empezó así una búsqueda de un nuevo estándar que pudiera resistir las acometidas de las nuevas tecnologías. Al principio, esta búsqueda fue descentralizada, dando lugar a Triple DES o FEAL, cuyas prestaciones mejoraban a DES ligeramente pero tiempo después NIST convocó el concurso público para buscar al AES.
+
+Este concurso pedía al algoritmo:
+\begin{itemize}
+	\item Resistencia frente al criptoanálisis, como su predecesor DES.
+	\item Un tamaño de clave de 128, 192 y 256 bits, frente a los 56 que tiene DES.
+	\item Eficiencia al implementarse en hardware y en software.
+	\item Funcionalidad en dispositivos con pocos recursos.
+	\item Ser de dominio público para poder implementarse en todos los dispositivos sin impedimentos además de brindar la oportunidad a la comunidad de encontrarle debilidades y subsanarlas, frente al ocultismo que rodeaba al DES.
+\end{itemize}
+
+Se enviaron un total de 15 diseños a este proceso, por lo que fue necesario reducir la lista para poder estudiarlos en profundidad. Así fue como se realizó una segunda ronda con 5 algoritmos finalistas:
+\begin{itemize}
+	\item \textbf{MARS}, desarrollado por IBM, los mismos que crearon DES.
+	\item \textbf{RC6}, de la familia Rivest Cipher desarrollada por RSA Security Inc.
+	\item \textbf{Rijndael}, quien finalmente ganó el concurso.
+	\item \textbf{Serpent}, fue subcampeón y también obtuvo el menor número de votos negativos.
+	\item \textbf{Twofish}, fue una mejora de Blowfish.
+\end{itemize}
+
+\section{Técnicas utilizadas}
+Las principales herramientas de ingeniería informática utilizadas en el trabajo son:
+\begin{itemize}
+	\item Algorítmica: debido a la aparición de varios algoritmos a lo largo de la memoria.
+	\item Criptografía: ya que es el tema principal del proyecto, principalmente sus conceptos básicos y sus filosofías de trabajo. Esta herramienta podría considerarse desde el punto de vista matemático.
+\end{itemize}
+
+También se han utilizado en el trabajo frecuentemente los conceptos matemáticos basados en:
+\begin{itemize}
+	\item Geometría lineal: dado que la mayor parte de los algoritmos existentes disponen de una transformación lineal de sus bloques.
+	\item Geometría afín: ya que es habitual la inclusión de transformaciones afines que rompan la linealidad de los algortimos con el objetivo de fortalecer los algoritmos frente al criptoanálisis.
+	\item Análisis Matemático: basado en las propiedades de las $S-boxes$ y $P-boxes$ en su condición de funciones.
+	\item Análisis diferencial: usado principalmente en la técnica de criptoanálisis diferencial.
+	\item Teoría de Galois: se requiere de forma esencial para el entendimiento de las bases del algoritmo Rijndael, asi como su fortaleza.
+\end{itemize}
+
+Para la comprensión y utilización de las técnicas anteriores han sido especialmente relevantes las siguientes asignaturas cursadas durante el grado:
+\begin{itemize}
+	\item \textit{Algorítmica}, principalmente, junto con \textit{Estructuras de Datos}, \textit{Fundamentos de la Programación} y \textit{Metodología} de la Programación enseñan a realizar, comprender y analizar algoritmos.
+	\item \textit{Seguridad y Protección de Sistemas Informáticos} y \textit{Criptografía y Computación}, donde se estudia la criptografía desde el punto de vista informático, dándole prioridad a la eficiencia, la implementación y los protocolos que se utilizan habitualmente.
+	\item \textit{Teoría de Números y Criptografía}, donde se estudia la criptografía basándose en su perspectiva matemática, como podrían ser las propiedades de difusión y confusión de los algoritmos.
+	\item \textit{Álgebra III}, principalmente, junto con \textit{Álgebras, Grupos y Representaciones}, y \textit{Álgebra Conmutativa y Computacional}, donde se estudian las bases de la Teoría de Galois junto con las propiedades de los grupos y cuerpos.
+	\item \textit{Geometría I} y \textit{Álgebra I}, donde se establecen las bases de las transformaciones lineales.
+	\item \textit{Geometría III}, donde se establecen las bases de las transformaciones afines.
+	\item \textit{Ecuaciones Diferenciales I y II}, y \textit{Curvas y Superficies}, donde se dan los primeros pasos al análisis diferencial.
+	\item \textit{Álgebra II}, \textit{Cálculo Matemático I y II}, donde se estudian las propiedades de las funciones biyectivas, principalmente vistas en las $S-boxes$ y $P-boxes$.
+	\item \textit{Ingeniaría de Servidores, Sistemas con Multiprocesador} y \textit{Sistemas Empotrados}, en el que se presentan las \textit{FPGAs} que son utilizadas para obtener los resultados obtenidos que analizaremos.
+\end{itemize}
+
+\section{Contenido de la memoria}
+Comenzamos dando un repaso en el capítulo \ref{chp:prelim} a los conceptos necesarios para el entendimiento de los términos usados en la memoria en \ref{sec:generaldef}, a las redes de Feistel en \ref{sec_feistelnet}, de sustitución-permutación en \ref{sec:spnet} y de cuerpos finitos (o Teoría de Galois) en \ref{sec:finitos} que dan fortaleza a los algoritmos que explicaremos.
+
+Tras esto, presentaremos en el capítulo \ref{chp:crypto} los ataques de fuerza bruta en \ref{sec:bruteforce}, que fue el que acabó rompiendo a DES, de criptoanálisis lineal en \ref{sec:linearcrypto} y de criptoanálisis diferencial en \ref{sec:diffcrypto}.
+
+Continuamos con un pequeño repaso a los modos de operación en el capítulo \ref{chp:modes} que permiten transformar un mensaje de cualquier longitud al tamaño de bloque adecuado, como Electronic CodeBook (el más básico) en \ref{sec:ECB}, Cipher Block Chaining en \ref{sec:CBC}, Output FeedBack (simula un cifrado de flujo) en \ref{sec:OFB}, Cipher FeedBack en \ref{sec:CFB} y Counter en \ref{sec:CTR}.
+
+Mientras que en el capítulo \ref{chp:finalists}, conoceremos las condiciones pedidas en el concurso y cómo se desarrolló el mismo en \ref{sec:AES}, y nos detendremos más específicamente en el funcionamiento de los finalistas Rijndael en \ref{sec:Rijndael}, Serpent en \ref{sec:serpent}, MARS en \ref{sec:MARS}, Twofish en \ref{sec:Twofish} y RC6 en \ref{sec:RC6}.
+ 
+Por último, analizaremos las conclusiones sacadas y presentaremos nuevas vías de investigación en el capítulo \ref{chp:conclusion}.
+
+\section{Objetivos}
+Se plantean los siguientes objetivos:
+\begin{itemize}
+	\item Estudio de los algoritmos finalistas: \textit{Rijndael}, \textit{Serpent}, \textit{MARS}, \textit{Twofish} y \textit{RC6}.
+	
+	\item La exposición de las fortalezas y debilidades de los algoritmos previamente citados, que se lleva a cabo a través de los experimentos publicados por expertos en la materia. Al igual que en el concurso público, se tomarán en cuenta tanto la perspectiva de la seguridad como su eficiencia.
+	
+	\item La búsqueda de aplicaciones que implementaran los protocolos, en particular, sobre qué lenguajes se ha implementado con éxito.
+\end{itemize}
+
+\section{Principales fuentes}
+Las fuentes más relevantes al trabajo han sido:
+las publicaciones de Eli Biham y Adi Shamir \cite{DES_Diff}, en la que comienza la presentación del criptoanálisis diferencial de una forma concisa y clara permitiendo entender las notaciones usadas en otras publicaciones, de Mitsuru Matsui \cite{DES_Lin}, que presenta el criptoanálisis lineal.
+
+Los trabajos originales de presentación de los algortimos al concurso han sido de gran utilidad, dado que no sólo exponen las funciones que emplean, si no que justifican su construcción en base a las pruebas que se les han ido haciendo, la inspiración que han tomado y los objetivos que buscaban \cite{Rijndael_design, Serpent_AES, MARS_AES, TwoFish_AES, RC6_AES}.
+
+También han resultado de utilidad los libros \cite{Crypto_Bases, Crypto_Bases2} sugeridos por el tutor principalmente enfocados al algoritmo Rijndael.

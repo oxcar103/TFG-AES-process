@@ -1,0 +1,401 @@
+\chapter{Marco teórico}
+\label{chp:prelim}
+En este capítulo, se procederá a desarrollar las bases de los algoritmos explicados a lo largo de la memoria. 
+Principalmente, son cifrado de Feistel, redes de Sustitución-Permutación y un poco de la Teoría de Galois, en particular, cuerpos finitos.
+
+\section{Definiciones Generales}
+\label{sec:generaldef}
+
+Estableceremos aquí algunos conceptos básicos de la criptografía.
+
+\subsection{Conceptos básicos}
+\begin{dfn}
+	Llamamos \textbf{texto plano} (\textit{plaintext}) al mensaje que queremos comunicar a nuestro receptor de forma privada. Por tanto, será tanto la entrada del algoritmo de cifrado como la salida del algoritmo de descifrado.
+	
+	A veces, simplemente lo notaremos como \textit{mensaje} \cite{Crypto_Bases}.
+\end{dfn}
+
+\begin{dfn}
+	Llamamos \textbf{texto cifrado} (\textit{cyphertext}) a la variación del texto plano que comunicamos a nuestro receptor de forma pública. Por tanto, será tanto la salida del algoritmo de cifrado como la entrada del algoritmo de descifrado.
+	
+	A veces, también lo notaremos como \textit{criptograma} \cite{Crypto_Bases}.
+\end{dfn}
+
+\begin{dfn}
+	Llamamos \textbf{clave o llave} (\textit{key}) de un algoritmo al parámetro que determina la salida funcional de un algoritmo criptográfico, esto es, cómo variará el mensaje al aplicarle el algoritmo de cifrado.
+	
+	A veces, se notará a la clave como \textit{principal} para diferenciarla de forma más clara de las claves de ronda.
+	
+	Llamamos \textbf{clave o llave de ronda} (\textit{round key}) a la variación de la clave principal usada en cada una de las diferentes rondas de los algoritmos, en el caso de necesitarlas \cite{Crypto_Bases2}.
+\end{dfn}
+
+\subsection{Criptoanálisis}
+\begin{dfn}
+	Llamamos \textbf{criptoanálisis} al estudio que analiza los sistemas de información en busca de aspectos ocultos del mismo que nos permitan tener acceso al mensaje sin necesidad de conocer la clave empleada \cite{Crypto_Bases2}.
+\end{dfn}
+
+Ahora, veremos algunas de las propiedades más destacables que se tienen en cuenta en la realización del criptoanálisis.
+\begin{dfn}
+	La \textit{confusión y difusión} son dos propiedades deseables para un cifrado seguro formuladas por Claude Shannon
+	\cite{Shannon}.
+	\begin{itemize}
+		\item \textbf{Confusión}: Cada bit del criptograma depende de varios bits de la clave.
+		\item \textbf{Difusión}: Estadísticamente, la variación de un bit del mensaje altera la mitad de los bits del criptograma y también la variación de un bit del criptograma altera la mitad de los bits del mensaje.
+	\end{itemize}
+\end{dfn}
+
+\begin{dfn}
+	Llamamos sistema criptográfico \textbf{incondicionalmente seguro} (\textit{unconditionally secure}) a aquel que puede resistir cualquier ataque de un atacante con recursos computacionales ilimitados. Este tipo de sistemas fue descartado debido a los altos costes de cifrado y descifrado y la longitud de la clave, así como el requerimiento de la creación de una nueva para cada mensaje. El sistema más conocido fue demostrado por Claude Shannon y es el \textit{one-time pad}, que consiste en crear una cadena de texto aleatorio del mismo tamaño que el mensaje y usarla de clave, mientras que la función de cifrado y descifrado es simplemente la operación xor($\oplus$) \cite{Crypto_Bases}.
+\end{dfn}
+
+\begin{dfn}
+	Llamamos sistema criptográfico \textbf{computacionalmente seguro} (\textit{computationally secure}) a aquel que puede resistir los ataques de un atacante con recursos computacionales limitados. Este tipo de sistemas, a pesar de ser claramente menos seguros que los anteriores, son más eficientes de calcular y los tiempos estimados para romperlos con los ataques conocidos puede ser fácilmente del orden de siglos, si el sistema se usa adecuadamente. Ejemplos de estos sistemas se usan cada día: \textit{AES}, \textit{RSA}, \textit{curvas elípticas}, \textit{firma digital}, \textit{SHA}, entre otros \cite{Crypto_Bases}.
+\end{dfn}
+
+\begin{dfn}
+	La técnica conocida como \textbf{key whitening} es ampliamente utilizada en sistemas de cifrado por bloques para aumentar su seguridad frente al ataque \href{https://en.wikipedia.org/wiki/Key_whitening} {\textit{meet-in-the-middle}} que demostró ser una gran amenaza para este tipo de sistemas criptográficos. Consiste en mezclar la clave con el mensaje de tal forma que el tamaño de clave no aumenta, la eficiencia tampoco se altera demasiado pero hace inviable dicho ataque. Usualmente, se suele aplicar realizando un xor ($\oplus$) entre parte de la clave y el mensaje, posteriormente se cifra el resultado y a la salida se le vuelve a aplicar un xor ($\oplus$) de parte de la clave. Fue inicialmente empleado por el algoritmo \textit{FEAL} y posteriormente adaptado por un gran número de algoritmo como \textit{AES}, \textit{MARS}, \textit{Twofish}, \textit{RC6}, entre otros \cite{Crypto_Bases2}.
+\end{dfn}
+
+\section{Redes de Feistel}
+\label{sec_feistelnet}
+
+\subsection{Definición}
+\begin{dfn}
+	Llamamos \textbf{función de Feistel} a la función utilizada en cada ronda para combinar parte del bloque con la función de ronda correspondiente. Esta función es la encargada de proporcionar la confusión y difusión en las redes de Feistel y su implementación es propia del algoritmo empleado \cite{Feistel_Def}.
+\end{dfn}
+
+\subsection{Funcionamiento}
+Las redes de Feistel se basan principalmente en el siguiente algoritmo:
+
+\begin{algorithm}[H]
+	\begin{algorithmic}[1]
+		\REQUIRE \ \\
+			\texttt{$L_0$}, mitad izquierda del plaintext\\
+			\texttt{$R_0$}, mitad derecha del plaintext\\
+		\FOR{\texttt{$i = 0 \rightarrow n$}}
+			\STATE{\texttt{$L_{i+1} = R_i$}, la parte derecha pasa a la izquierda sin modificar.}
+			\STATE{\texttt{$R_{i+1} = L_i \oplus F(R_i, K_i)$}, la parte izquierda se combina con la derecha tras pasar por la función de Feistel.}
+		\ENDFOR
+		
+		\RETURN{\texttt{($R_{n+1}, L_{n+1}$)}}
+	\end{algorithmic}
+	\caption{Redes de Feistel.}
+	\label{alg:feistelnet}
+\end{algorithm}
+
+Nótese que aunque se utiliza dicho algoritmo tanto para el cifrado como para el descifrado salvo las claves de ronda, la notación que aparece es la del cifrado pues para el descifrado se comienza notando a la parte izquierda como $R_{n+1}$ y a la derecha como $L_{n+1}$, el bucle va de forma decreciente desde $i = n \text{ hasta } 0$, y se intercambian la posición de las variables $L$ y $R$ así como sus índices, que pasan de ser $i+1$ a $i$ y viceversa. 
+
+Como he comentando, es importante destacar que las claves de ronda se calculan de distinta forma en el cifrado y en el descifrado. En particular, para el correcto funcionamiento del algoritmo, las claves de ronda se aplican en orden inverso, es decir, $K_i$ en el cifrado equivale a $K_{n-i}$ en el descifrado.
+
+Veamos por inducción sobre el número de rondas que podemos usar el mismo algoritmo para el cifrado y el descifrado.
+\begin{itemize}
+	\item Si $n = 0$.\\
+	Tenemos que, para el algoritmo de cifrado, metemos como entrada $M = (L_0, R_0)$ y el algoritmo nos devuelve:
+	$$\begin{cases}
+		L_1 = R_0,\\
+		R_1 = L_0 \oplus F(R_0, K_0).
+	\end{cases}$$
+	
+	Y tenemos $C = (R_1, L_1)$ como salida.
+	
+	Ahora, pasamos a introducir los valores $C = (R_1, L_1) = (L^*_0, R^*_0)$ como entrada al mismo algoritmo y obtenemos:
+	$$\begin{cases}
+		L^*_1 = R^*_0,\\
+		R^*_1 = L^*_0 \oplus F(R^*_0, K_0).
+	\end{cases}$$
+	
+	La salida que obtenemos es $(R^*_1, L^*_1)$, que tenemos que ver que equivale a $M$.
+	
+	Usando las igualdades anteriores y recordando que $K_i = K^*_{n-i}$, tenemos que:
+	$$\begin{cases}
+		L^*_1 = R^*_0 = L_1 = R_0,\\
+		R^*_1 = L^*_0 \oplus F(R^*_0, K^*_0) \\ = R_1 \oplus F(L_1, K_{n-0}) = \left(L_0 \oplus F(R_0, K_0)\right) \oplus F(R_0, K_0) = L_0.
+	\end{cases}$$
+	
+	Por tanto, la salida $(R^*_1, L^*_1) = (L_0, R_0) = M$, de lo que podemos obtener que, para una única ronda, el mismo algoritmo sirve para el cifrado y el descifrado si mantenemos la clave $K$.
+	
+	\item Si sabemos que se cumple para $n = m-1$, veamos que se cumple para $n = m$.\\
+	Para este caso, nos bastaría comprobar que $(L_m, R_m) = (R^*_1, L^*_1)$ pues, a falta de introducir dos permutaciones idénticas en el algoritmo original y reordenar el índice del algoritmo en el descifrado, habríamos reducido el número de rondas en 1, y sabemos que para este caso, el cifrado y el descifrado utilizan el mismo algoritmo.
+	
+	Del algortimo de cifrado sabemos que su última ronda es:
+	$$\begin{cases}
+		L_{m+1} = R_m\\
+		R_{m+1} = L_m \oplus F(R_m, K_m)
+	\end{cases}$$
+	
+	Su salida finalmente sería $(R_{m+1}, L_{m+1})$
+	
+	Entonces, pasamos a introducir los valores $C = (R_{m+1}, L_{m+1}) = (L^*_0, R^*_0)$ como entrada al mismo algoritmo y obtenemos en su primera ronda:
+	$$\begin{cases}
+		L^*_1 = R^*_0,\\
+		R^*_1 = L^*_0 \oplus F(R^*_0, K^*_0).
+	\end{cases}$$
+	
+	Usando que las igualdades anteriores y recordando que $K_i = K^*_{n-i}$, tenemos que:
+	$$\begin{cases}
+		L^*_1 = R^*_0 = L_{m+1} = R_m,\\
+		R^*_1 = L^*_0 \oplus F(R^*_0, K^*_0) = \left(L_m \oplus F(R_m, K_m)\right) \oplus F(R_m, K_m) = L_m.
+	\end{cases}$$
+	
+	Hemos obtenido que $(L_m, R_m) = (R^*_1, L^*_1)$.
+	
+	Si cambiamos el algoritmo para que en el paso $n = m$ haga un doble intercambio (o \textit{swap} en inglés) entre las variables $L_m$ y $R_m$, al estar efectuando dos veces este intercambio, el resultado no cambia pues se anulan pero podemos ver que si paramos el algoritmo en el primero, obtenemos el resultado del cifrado con $n = m-1$, es decir, $(R_m, L_m) = (L^*_1, R^*_1)$, es decir, salvo un ajuste en el índice del bucle, sería la entrada del algoritmo de descifrado con $n = m-1$.
+	
+	Recapitulando, hemos visto que $(L_m, R_m) = (L^*_1, R^*_1)$, por lo que la primera ronda del descifrado equivale a la última del cifrado y cómo transformar el algoritmo para reducirle rondas (el doble \textit{swap} se puede aplicar en cualquier ronda). Por tanto, obtenemos que si mantenemos la clave $K$, el mismo algoritmo sirve para el cifrado y el descifrado es válido para $m-1$ rondas, también lo es para $m$ rondas.
+	
+\end{itemize}
+
+Aunque parezca un gran cambio, realmente sólo es a nivel teórico para que los valores de los $L_i$ y $R_i$ sean iguales tanto en el cifrado como en el descifrado.
+
+Estas redes fueron usadas por primera vez por Horst Feistel y Don Coppersmith en el cifrado Lucifer de IBM, un predecesor del DES. También cabe notar que hay generalizaciones de este concepto donde en lugar de dividir el bloque en $L_i$ y $R_i$, se divide en más partes. En estas generalizaciones, las estructura sigue siendo similar en el aspecto de que el bloque en el extremo derecho pasa a ser el del extremo izquierdo sin modificar y el resto de bloque pasan una posición a la derecha combinándose con el resultado de pasar el bloque del extremo derecho por la función de Feistel. Un ejemplo de este caso se observará en el núcleo criptográfico del sistema MARS.
+
+\section{Redes de Sustitución-Permutación}
+\label{sec:spnet}
+
+\subsection{Definiciones}
+El núcleo de estas redes, reside en la cajas de sustitución y permutación \cite{SP_Def}.
+
+\begin{dfn}
+	Llamamos \textbf{caja de sustitución} (\textit{S-box}) a la función biyectiva que toma un bloque de bits y lo transforma en otro del mismo tamaño, de tal manera que cumple la propiedad de difusión. Idealmente, el bloque de texto de cada ronda se divide en, al menos, dos cajas de sustitución.
+	
+	En algunos algoritmos de cifrado/descifrado se usan una generalización de las cajas de sustitución sin la restricción de conservar el tamaño de la entrada en la salida pero manteniendo el mismo nombre, como ocurre en el propio \textit{DES}.
+\end{dfn}
+
+\begin{dfn}
+	Llamamos \textbf{caja de permutación} (\textit{P-box}) a la función de permutación que se aplicará a un bloque de bits durante el algoritmo. Idealmente, las cajas de permutación reparten los bits de salida de las cajas de sustitución al mayor número posible de cajas de sustitución diferentes para la siguiente ronda.
+\end{dfn}
+
+\subsection{Funcionamiento}
+Para el cifrado, se generan tantas claves de ronda como rondas tenga el algoritmo y por cada ronda, se mezcla la clave de ronda con el bloque de entrada y se hace pasar una o más veces por las \textit{S-box} y las \textit{P-box}. El orden y la cantidad de las mismas depende de la definición del algoritmo.
+
+El descifrado es similar sólo que las claves de ronda se aplican en el orden inverso y las cajas son sustituidas por sus inversas.
+
+\subsection{Comparación con las redes de Feistel}
+Cuando a un algoritmo basado en redes de Feistel le incluimos $S-boxes$ en su función de Feistel, obtenemos una gran similitud entre las redes de sustitución-permutación y las redes de Feistel. Las principales diferencias son que ni la función de ronda ni las $S-boxes$ tienen que ser invertibles pues se aplican las mismas tanto en el cifrado como en el descifrado mientras que las redes de sustitución-permutación tienen que usar las $S-boxes$ y $P-boxes$ inversas, y que la estructura de las redes de sustitución-permutación son más fácilmente paralelizables.
+
+\section{Cuerpos Finitos}
+\label{sec:finitos}
+
+\subsection{Definiciones}
+\begin{dfn}
+	Dado un cuerpo $K$ y un polinomio no constante $p(X) \in K[X]$ de grado $n > 0$, se define el cuerpo de descomposición de $p$ como un $E_p$ que cumple:
+	\begin{itemize}
+		\item Que el polinomio $p(X)$ descompone completamente en $E_p$:
+		$$p(X) = \alpha \prod\limits_{i=0}^n \left(X-\alpha_i\right) \quad \text{ con } \alpha \in K, \ \alpha_i \in E_p.$$
+		\item Que sea el cuerpo minimal bajo dicha condición.
+	\end{itemize}
+\end{dfn}
+
+\begin{dfn}
+	Una extensión de cuerpos algebraica $N/K$ es normal si $N$ es el cuerpo de descomposición de una familia de polinomios en $K[X]$.
+\end{dfn}
+
+\begin{dfn}
+	Una extensión de cuerpo separable de un cuerpo $K$ es un cuerpo $E$ que contiene a $K$ y que puede ser generado adjuntando a $K$ un conjunto de elementos $\alpha_i$, tales que son raíces de polinomios separables (es decir, sus raíces son distintas) sobre $K$.
+\end{dfn}
+	
+\begin{dfn}
+	Llamamos cuerpo perfecto a aquel en el que todas sus extensiones son separables. En particular, sabemos que todo cuerpo finito es un cuerpo perfecto.
+\end{dfn}
+
+\begin{dfn}
+	Una extensión de cuerpo algebraica $E/K$ se dice \textbf{extensión de Galois} si es una extensión normal y separable.
+\end{dfn}
+
+\begin{dfn}
+	Sobre una extensión de Galois $E/K$ se define el \textbf{grupo de Galois} $\operatorname{Gal}(E/K)$ como el grupo de los automorfismos de $E$ sobre $K$.
+	
+	$$\operatorname{Gal}(E/K) = \operatorname{Aut}_K(E) \Rightarrow |Gal(E/K)| = |Aut_K(E)| = [E: K].$$
+\end{dfn}
+
+\begin{dfn}
+	Llamamos cuerpo finito o cuerpo de Galois a un cuerpo definido sobre un conjunto finito de elementos. Lo denotaremos $F_q$ con $q$ el cardinal.
+\end{dfn}
+
+%Vista la definición de cuerpo de Galois, vamos a ver ahora el tipo de cuerpo de Galois usado por el AES:
+
+\begin{dfn}
+	Sea $a \in F^*$ un elemento no nulo del cuerpo $F$, llamamos orden de $a$ al menor $d \in \mathbb{N}$ tal que $a^d = 1$.
+\end{dfn}
+
+\begin{thm}
+	El orden de todo elemento $a \in F^*_q$ divide a $q-1$.
+\end{thm}
+
+\begin{proof}
+	Como primer paso, veremos que $a^{q-1} = 1$ de forma similar a como lo haríamos al demostrar el Pequeño Teorema de Fermat \cite{Crypto_Bases}.
+	
+	Tomamos entonces el producto de todos los elementos no nulos de $F_q$, $\displaystyle \prod_{b_i \in F^*_q} b_i$, que tiene $q-1$ elementos al ser $F_q$ un cuerpo.
+	
+	Ahora multiplicamos cada miembro por $a$ y, dado que la multiplicación por un elemento no nulo de $F_q$ es biyectiva ($a \in F^*_q$), tenemos que $\displaystyle \prod_{b_i \in F^*_q} ab_i = a^{q-1} \prod_{b_i \in F^*_q} b_i$, luego $a^{q-1} = 1$.
+	
+	Para terminar, llamando $d$ al orden de $a$ y suponiendo que no divide a $q-1$, tenemos que existe $r \in \mathbb{N}$ tal que $q-1 = cd + r$ y, por tanto, $a^r = a^{q - 1 - cd} = 1$. Llegamos entonces a una contradicción con la minimalidad del orden $d$, concluyendo entonces que $d$ divide a $q-1$.	
+\end{proof}
+
+\begin{dfn}
+	Dado un cuerpo $F$ finito de $n$ elementos, diremos que $g$ es un generador si su orden es $n-1$. Esto es, las potencias de $g$ generan todo $F^*$, el conjunto de elementos no nulos de $F$.
+\end{dfn}
+
+\begin{lemma}
+	$\displaystyle \sum_{d|n} \varphi(d) = n$.
+\end{lemma}
+
+\begin{proof}
+	Para simplificar la demostración, llamaremos $\displaystyle f(n) = \sum_{d|n} \varphi(d)$. De esa forma, tendremos que demostrar $f(n) = n$.
+	
+	En primer lugar, probaremos que $f$ es multiplicativa para enteros coprimos, esto es, $f(mn) = f(m)f(n)$ con $\gcd(m,n) = 1$.
+	
+	Para ello, descompondremos cada $d|mn$ en $d = d_1 d_2$ con $d_1|m$ y $d_2|n$, por tanto, $\gcd(d_1, d_2) = 1$.
+	De este modo, $\varphi(d) = \varphi(d_1) \varphi(d_2)$ por las propiedades de $\varphi$.
+	
+	Una vez probado esto, podemos decir que todos los divisores $d$ de $mn$ son todas las posibles combinaciones de divisores $d_1$ de $m$ con los divisores $d_2$ de $n$ y podemos escribir $\displaystyle f(mn) = \sum_{d_1|m} \sum_{d_2|n} \varphi(d_1) \varphi(d_2) = \left(\sum_{d_1|m} \varphi(d_1)\right) \left(\sum_{d_2|n} \varphi(d_2)\right) = f(m) f(n)$, es decir, $f$ es multiplicativa.
+	
+	Ahora, probaremos que $f(n) = n$ a través de su descomposición en primos $n = p_1^{\alpha_1} p_2^{\alpha_2} \dots p_r^{\alpha_r}$. Gracias a la multiplicatividad de $f$ sabemos que $f(n) = f(p_1^{\alpha_1}) f(p_2^{\alpha_2}) \dots f(p_r^{\alpha_r})$, por lo que nos basta ver que $f(p^\alpha) = p^\alpha$ para cualquier $p$ primo.
+	
+	$$f(p^\alpha) = \sum_{i = 0}^{\alpha} \varphi(p^i) = 1 + \sum_{i = 1}^{\alpha} (p^i - p^{i-1}) = p^\alpha \quad \text{ para todo } \alpha > 0, p \text{ primo.}$$
+	
+	Finalmente, $f(n) = f(p_1^{\alpha_1}) f(p_2^{\alpha_2}) \dots f(p_r^{\alpha_r}) = p_1^{\alpha_1} p_2^{\alpha_2} \dots p_r^{\alpha_r} = n$
+\end{proof}
+
+\begin{thm}
+	Todo cuerpo finito tiene un generador.
+	Si $g$ es un generador de $F^*_q$, entonces $g^j$ es también un generador si y sólo si $\gcd(j, q-1) = 1$.
+	En particular, hay $\varphi (q-1)$ generadores distintos de $F^*_q$
+\end{thm}
+
+\begin{proof}
+	Supongamos $a \in F^*_q$ de orden $d$.
+	
+	Veamos primero que $a^j$ tiene orden $d$ si y sólo si $\gcd(j, d) = 1$
+	
+	\begin{itemize}
+		\item Necesidad
+		
+		Si tomamos $j$ con $\gcd(j, d) = d' > 1$, tenemos que $d/d'$ y $j/d'$ son números enteros y podemos concluir que $(a^j)^{d/d'} = (a^d)^{j/d'} = 1^{j/d'} = 1$.
+		
+		Por tanto, el orden de $a^j$ es $d/d' < d$.
+		
+		\item Suficiencia
+		
+		Tomamos $j$ tal que $\gcd(j, d) = 1$ y suponemos que $a^j$ tiene orden $d'' < d$. Claramente, $1 = (a^j)^{d''} = (a^{d''})^j$. Dado que $d$ es el orden de $a$, tenemos que $(a^{d''})^d = (a^d)^{d''} = 1^{d''} = 1$.
+		
+		Por tanto, $(a^{d''})^1 = (a^{d''})^{\gcd(j,d)} = (a^{d''})^{uj} (a^{d''})^{vd} = 1$. Lo que es una contradición con que $a$ tenga orden $d$.
+		
+		Por tanto, el orden de $a^j$ es $d$ .
+	\end{itemize}
+
+	Además, tenemos que todas las potencias de $a$ $(a, a^2, \dots, a^d = 1)$ cumplen la ecuación $X^d = 1$ y son todas las raíces de la misma, por lo que no hay más elementos con orden $d$. Es decir, $F^*_q$ tiene $\varphi (d)$ elementos distintos de orden $d$, aquellos $a^j$ que cumplen que $\gcd(j,d) = 1$.
+	
+	Hemos probado que, si existe un elemento no nulo $a$ de orden $d$, existen $\varphi(d)$ elementos distintos de dicho orden. %Usando el teorema anterior y que $\displaystyle \sum_{d|(q-1)} \varphi(d) = q-1$
+	
+	Ahora, veamos que existe $g$ generador de $F^*_q$ que, por definición, es un elemento de orden $q-1$.
+	
+	Sabemos que la función de Euler cumple que $\displaystyle \sum_{d|n} \varphi(d) = n$. Por tanto, al aplicarlo sobre $q-1$ tenemos que $\displaystyle \sum_{d|q-1} \varphi(d) = q-1$. Como además sabemos por la proposición anterior que todo elemento de $F^*_q$ tiene un orden $d$ divisor de $q-1$, se concluye que necesariamente existen elementos de $F^*_q$ con orden $d$ para todo $d|{q-1}$. 
+	
+	Una vez probada la propiedad para $a \in F^*_q$ de orden $d$, las hipótesis del enunciado serían un caso particular.
+\end{proof}
+
+\begin{thm}
+	Si $F_q$ es un cuerpo con $q = p^f$ elementos, entonces todo elemento cumple la ecuación $X^q - X = 0$ y $F_q$ es precisamente el conjunto de raíces de esta ecuación. Por otro lado, para cada potencia de primo $q = p^f$ el cuerpo de descomposición sobre $F_p$ del polinomio $X^q - X$ es un cuerpo de $q$ elementos.
+\end{thm}
+
+\begin{proof}
+	Supongamos que tenemos el cuerpo finito $F_q$. Dado que el orden de todo elemento no nulo divide a $q-1$, tenemos que es raíz del polinomio $X^{q-1}-1 = 0$. Por tanto, como 0 es raíz de $X = 0$, todo elemento de $F_q$ es raíz de $(X^{q-1}-1)X = X^q - X = 0$.
+	
+	Dado que $F_q$ tiene $q$ elementos y todos ellos son raíces de $X^q - X$, el cuál tiene exactamente $q$ raíces, concluimos que $F_q$ es el cuerpo de extensión del polinomio $X^q - X = 0$.
+	
+	Probemos ahora que para cada $q = p^f$, el cuerpo de descomposición es $F_q$.
+	
+	Llamemos $F$ al cuerpo de descomposición de $X^q - X$ sobre $F_p$.
+	
+	Si derivamos $X^q-X$ obtenemos $qX^{q-1} - 1 = p^fX^{q-1} - 1 = -1$ dado que estamos en el cuerpo $F_p$. Como $X^q-X$ y su derivada no tienen raíces comunes, todas las raíces son simples, por lo que $F$ debe tener $q$ raíces distintas del polinomio.
+	
+	Veamos ahora que este conjunto de raíces forma un cuerpo, comprobando que la suma y el producto de raíces es también una raíz, y por tanto $F$ no contiene más elementos.
+	
+	Para ver que la suma de raíces da como resultado otra raíz, usaremos que $(a+b)^p = a^p + b^p$ en todo cuerpo de característica $p$ como es el caso de $F_p$ y todas sus extensiones, como $F$. Para ello, utilizaremos la expansión binómica de $(a + b)^p$:
+		{\footnotesize$$(a + b)^p = \sum_{j=0}^{p} \binom{p}{j}a^{p-j} b^j = a^p + \left(\sum_{j=1}^{p-1} \binom{p}{j} a^{p-j} b^j\right) + b^p = a^p + \left(\sum_{j=1}^{p-1} \frac{p!}{(p-j)! j!} a^{p-j} b^j\right) + b^p = a^p + b^p$$}
+	dado que $\displaystyle \frac{p!}{(p-j)! j!}$ es divisible por p para $0 < j < p$.
+	
+	Por tanto, tenemos que $(a + b)^q = (a + b)^{p^f} = ((a + b)^p)^{p^{f-1}} = (a + b)^{p^{f-1}} = ((a + b)^p)^{p^{f-2}} = (a + b)^{p^{f-2}} = \dots = (a + b)^p = a + b$.
+	
+	Para el producto, basta con ver que si $a^q = a$ y $b^q = b$, claramente $(ab)^q = a^qb^q = ab$.
+	
+	Con esto, podemos concluir que el conjunto de las $q$ raíces de $X^q - X$ es un cuerpo, en particular es el menor cuerpo que contiene a todas las raíces del polinomio, esto es, la definición del cuerpo de descomposición $F$.
+\end{proof}
+
+\begin{thm}
+	Sea $F_q$ el cuerpo finito de $q = p^f$ elementos, y sea la aplicación $\sigma$ que lleva cada elemento a su potencia $p$, $\sigma(a) = a^p$.
+	
+	Entonces, $\sigma$ es un automorfismo del cuerpo $F_q$. Los elementos de $F_q$ que quedan fijos por $\sigma$ son precisamente los elementos del cuerpo primo $F_p$. La potencia $f$-ésima de la aplicación $\sigma$ es la menor potencia que da como resultado la identidad.
+\end{thm}
+
+\begin{proof}
+	Para ver si es un automorfismo, basta comprobar que conserva multiplicaciones y sumas. No obstante, ambos resultados ya fueron vistos en la demostración anterior.
+	
+	Es fácil ver que los elementos fijos de $\sigma$ son las raíces de $X^p - X$ pues cumplen que $a^p = a$. De igual forma, podemos notar que la potencia $j$-ésima de $\sigma$ deja fijas las raíces de $X^{p^j} - X$ y que $\sigma^f$ es la identidad pues deja fijas las raíces de $X^{p^f} - X = X^q - X$, es decir, deja todos los elementos fijos pues todos son raíces de $X^q - X$ como vimos en el teorema anterior.
+	
+	Finalmente, vemos que no existe $j < f$ tal que $\sigma^j$ ya que entonces implicaría que todos los elementos de $F_q$ son raíces de $X^{p^j} - X$. Esto sería una contradicción dado que este polinomio no puede tener más de $p^j$ raíces pero $p^j < p^f = q$ y $F_q$ tiene $q$ elementos. 
+\end{proof}
+
+\begin{thm}
+	Sea $F_q$ el cuerpo finito de $q = p^f$ elementos, y sea la aplicación $\sigma$ que lleva cada elemento a su potencia $p$, $\sigma(a) = a^p$.
+	
+	Si tomamos $\alpha \in F_q$, el conjuto de conjugados sobre $F_p$ son los elementos $\sigma^j(\alpha) = \alpha^{p^j}$
+\end{thm}
+
+\begin{proof}
+	Sea $d$ el grado de la extensión $F_p(\alpha)$ sobre $F_p$. Entonces, tenemos que $F_p(\alpha)$ es similar a $F_{p^d}$ y por tanto $\alpha$ satisface el polinomio $X^{p^d} - X$ pero ningún $X^{p^j} - X$ con $j < d$.
+	
+	Aplicando $\sigma$ sobre $\alpha$ reiteradas veces, podemos conseguir $d$ elementos distintos, estos son $\sigma^j(\alpha)$.
+	
+	Ahora, probaremos que estos elementos son los conjugados de $\alpha$ ya que satisfacen los mismos polinomios mónicos irreducibles y, dado que son del mismo grado que $\alpha$, no tienen más raíces.
+	
+	Para ello, probaremos que si $\alpha$ satisface $f(X) \in F_p[X]$, entonces $\sigma(\alpha)$ también lo satisface.
+	
+	Sea $f(X) = \sum a_j X^j$ con $a_j \in F_p$. Como $\alpha$ es raíz de $f(X)$, tenemos que $ 0 = f(\alpha) = \sum a_j \alpha^j$. Por tanto, aplicando $\sigma$ tenemos que $0^p = \left(\sum a_j \alpha^j\right)^p$
+	
+	Usando ahora que $(a+b)^p = a^p + b^p$, que $(ab)^p = a^p b^p$ y que $a_j^p = a_j$ dado que $a_j \in F_p$, la expresión nos queda como:
+	$$0 = \sum a_j \left(\alpha^j\right)^p = \sum a_j \left(\alpha^p\right)^j = f(\sigma(\alpha))$$
+	
+	Por tanto, si restringimos $f(X)$ a ser un polinomio mónico irreducible y notando que $\sigma^j(\alpha) = \sigma(\sigma^{j-1}(\alpha))$, hemos probado que los conjugados de $\alpha$ son $\sigma^j(\alpha) = \alpha^{p^j}$ con $ 0 < j \leq d$.
+\end{proof}
+
+\begin{thm}
+	Sea $F_q$ el cuerpo finito de $q = p^f$ elementos, los subcuerpos de $F_q$ son $F_{p^d}$ con $d$ divisor de $f$.
+	
+	Si $\alpha \in F_q$ es usado para extender $F_p$, se obtiene uno de estos subcuerpos.
+\end{thm}
+
+\begin{proof}
+	Sea $\alpha \in F_q$ y sea $d$ el grado del único polinomio mónico irreducible sobre $F_p$ que satisface. Podemos extender $F_p$ a $F_p (\alpha)$ y deducimos que tiene también grado $d$. Dado que $F_p(\alpha)$ tiene grado $d$ es isomorfo a $F_{p^d}$, y como es el menor cuerpo que contiene a $\alpha$ y $F_p$, $F_p(\alpha)$ es un subcuerpo de $F_q$.
+	
+	Por tanto, podemos ver $F_q$ como un espacio vectorial sobre $F_p(\alpha)$. O lo que es lo mismo, $F_{p^f}$ es un espacio vectorial sobre $F_{p^d}$, cuya dimensión diremos que es $d'$. Entonces, se tiene que el número de elementos de $F_{p^f}$ debe ser $(p^d)^{d'} = p^f$, por lo que $d d' = f$ y esto nos lleva a que $d|f$.
+	
+	Por otro lado, para cada $d|f$ el cuerpo finito $F_{p^d}$ veremos que está contenido en $F_q$.
+	
+	Como $d|f$ tenemos que $f=dd'$ para algún $d'$. Entonces, usando reiteradas veces la igualdad $X^{p^d} = X$ que cumple cualquier elemento $\alpha$ de $F_{p^d}$, tenemos que:
+	$$X = X^{p^d} = \left(X^{p^d}\right)^{p^d} = X^{p^{2d}} = \dots = \left(X^{p^{d(d'-1)}}\right)^{p^d} = X^{p^{dd'}} = X^{p^f}$$.
+	
+	Esto es, $\alpha \in F_q$. Y con esto, concluye la demostración.
+\end{proof}
+
+\begin{thm}
+	Para cada $q = p^f$, el polinomio $X^q - X$ se factoriza en $F_p[X]$ como el producto de todos los polinomios mónicos irreducibles de grado $d|f$
+\end{thm}
+
+\begin{proof}
+	Sea $\alpha$ la raíz de $g_\alpha(X)$, un polinomio mónico irreducible de grado $d|f$. Entonces, extendiendo $F_p$ por $\alpha$ obtenemos un isomorfismo de $F_{p^d}$, que está contenido en $F_q$. Por tanto, $\alpha$ es raíz de $X^q - X$ luego $g_\alpha(X) | X^q - X$.
+	
+	Por otro lado, sea $g(X) | X^q - X$ un polinomio mónico irreducible. Dado que las raíces de $X^q - X$ están en $F_q$, las raíces de $g(X)$ también lo están. Entonces, por el teorema anterior, si extendemos $F_p$ usando una de las raíces de $g(X)$, obtendremos algún $F_{p^d}$ con $d$ dividiendo a $f$, por lo que el grado de $g(X)$ divide a $f$. Concluimos entonces que los polinomios mónicos irreducibles que dividen a $X^q - X$ son todos aquellos cuyo grado divide a $f$.
+	
+	Dado que $\left(X^q - X\right)' = qX^{q-1} - 1 = -1$ no tiene raíces, no puede tener raíces comunes con $X^q - X$. Por tanto, $X^q - X$ no tiene raíces múltiples, es decir, $X^q - X$ es el producto de estos polinomios.
+\end{proof}
+
+En la práctica, para construir $F_q$ con $q = p^n$, se toma un polinomio $f(X)$ irreducible de grado $n$ en $\mathbb{Z}_p[X]$ y se calcula $F_p[X] / \langle f(X) \rangle$:
+
+\begin{thm}
+	Todo cuerpo finito tiene $p^n$ elementos con $p$ primo y $n$ entero positivo.
+%	Sea $p$ un número primo, $n \in \mathbb{N}$ con $n > 0$ y $q = p^n$ una potencia de $p$, existe un único cuerpo con $q$ elementos, salvo isomorfismo, que es además el cuerpo descomposición de $X^{p^n} - X$ sobre $\mathbb{Z}/p \mathbb{Z}$.
+%	
+%	Dicho cuerpo se suele denotar $F_q$ o, reflejando que es un cuerpo de Galois, $GF(p^n)$ y se puede construir como $F_q = F_p[X] / \langle f(X) \rangle$ con $\langle A \rangle$ el ideal generado por $A$ y $f(X) \in F_p[X]$ un polinomio irreducible de grado $n$ 
+\end{thm}

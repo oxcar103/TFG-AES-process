@@ -1,0 +1,77 @@
+\chapter{Técnicas de criptoanálisis}
+\label{chp:crypto}
+En este capítulo, daremos una aproximación a la base de las técnicas criptográficas más comunes y diremos que un algoritmo es resistente al criptoanálisis cuando no podamos encontrar ninguna técnica mejor que el ataque de fuerza bruta.
+
+\section{Ataque por fuerza bruta}
+\label{sec:bruteforce}
+Un \textbf{ataque por fuerza bruta} (\textit{brute force attack}) consiste en probar de manera exhaustiva todos los posibles valores privados, que en el caso de los cifrados simétricos, consiste en probar todas las posibles claves.
+
+Es un ataque cuya progresión en tiempo es exponencial con el tamaño de la clave, pues una clave del doble de la longitud, hará que el tiempo de cálculo necesario pase a elevarse al cuadrado. Sin embargo, es un ataque capaz de romper todo tipo de sistema criptográfico computacionalmente seguro si se dispone del suficiente tiempo o de recursos computacionales ilimitados.
+
+Con el avance de los recursos disponibles, este ataque se hace más poderoso. De hecho, eso fue lo que pasó con \textit{DES}, que al tener una clave de 56 bits, resistía muy bien dichos ataques al principio pero al cabo de unos años, su clave no era suficientemente fuerte, y actualmente se desaconseja su uso por este motivo. Es también el motivo por el cuál dentro de las condiciones del \textit{AES process} se requiriese un tamaño de clave con distintos valores, para asegurar que en el caso de que 128 bits no fueran seguros dentro de algún tiempo, se puedan usar los otros tamaños de clave.
+
+Actualmente, el progreso de los recursos ha dado un gran avance con tecnologías como las unidades de procesamiento de gráficos (GPU) o los \textit{field-programmable gate array} (FPGA), que se aprovechan del paralelismo intrínseco del ataque de fuerza bruta para realizar el desarrollo de múltiples ataques simultáneamente con un coste económico o energético muy eficiente. Esto hace que la clave de \textit{DES} sea completamente irrisoria pero no llega a afectar todavía a la clave de 128 bits.
+
+Cabe destacar que aunque es necesario vigilar este ataque, es carente de sentido comparar los algoritmos por este criterio ya que todos disponen de los mismos tamaños de clave. No obstante, puntualizaremos que si pretendemos atacarlos por esta vía, serían necesarios $2^{128}$ intentos en el tamaño de bloque más pequeño, si suponemos que podemos hacer $10^{20}$ intentos por segundo (valor que está lejos de ser el que podemos actualmente), necesitaríamos aproximadamente 8 veces el tiempo que lleva existiendo el universo.
+
+\section{Criptoanálisis Lineal}
+\label{sec:linearcrypto}
+El criptoanálisis lineal es una técnica utilizada principalmente en cifrados de bloques o flujo que intenta aproximar la acción del algoritmo a alguna transformación afín para así simplificar el problema de romperlo.
+
+Este análisis requiere de una parte de estudio del algoritmo de forma teórica en la cuál se prueban diferentes claves y mensajes, y se describen las expresiones que relacionen los bits del mensaje, del criptograma y de la clave. Para aclarar el funcionamiento, supondremos un sistema criptográfico de 4 bits de bloque y de clave al cuál le probamos 10 combinaciones de mensajes y 10 claves, haciendo un total de 100 pruebas, tras analizar los resultados, descubrimos que:
+\begin{itemize}
+	\item $M_1 = C_3$,
+	\item $M_2 \oplus C_1 \oplus C_2 \oplus C_3 = K_0 \oplus K_2$,
+	\item $M_0 \oplus M_3 \oplus C_0 \oplus C_3 = K_1$,
+	\item $K_3 = K_3$, es decir, no se usa.
+\end{itemize}
+
+Nótese que el mensaje sería $M_0M_1M_2M_3$, la clave $K_0K_1K_2K_3$ y el criptograma $C_0C_1C_2C_3$.
+
+Una vez calculadas las expresiones afines, aplicamos dichas fórmulas a valores mensaje-criptograma conocidos y estudiamos estadísticamente qué combinación de bits es la que se ajusta mejor, reduciendo asi el número de posibles claves o encontrándola en el mejor de los casos. En el primer caso, basta con aplicar después el ataque de fuerza bruta sobre el conjunto de posibles claves y ya habremos logrado la clave, haciendo de esta forma insegura las transmisiones realizadas. Esto puede afectar tanto a mensajes futuros como a mensajes ya enviados que no pudimos descifrar.
+
+En nuestro ejemplo, si tomamos $M_A=1011$ con $C_A=0010$, $M_B=1100$ con $C_B=1011$ y $M_C=0000$ con $C_C=0110$ y aplicamos las fórmulas vemos que:
+$$\begin{cases}
+	M_{A2} \oplus C_{A1} \oplus C_{A2} \oplus C_{A3} = 0 = K_0 \oplus K_2 & \text{ por tanto } K_0 = K_2, \\
+	M_{A0} \oplus M_{A3} \oplus C_{A0} \oplus C_{A3} = 0 = K_1 & \text{ podemos ver que  } K_1 = 0.
+\end{cases}$$
+$$\begin{cases}
+	M_{B2} \oplus C_{B1} \oplus C_{B2} \oplus C_{B3} = 0 = K_0 \oplus K_2 & \text{ luego } K_0 = K_2, \\
+	M_{B0} \oplus M_{B3} \oplus C_{B0} \oplus C_{B3} = 1 = K_1 & \text{ llegamos a } K_1 = 1.
+\end{cases}$$
+$$\begin{cases}
+	M_{C2} \oplus C_{C1} \oplus C_{C2} \oplus C_{C3} = 0 = K_0 \oplus K_2 & \text{ se tiene que } K_0 = K_2, \\
+	M_{C0} \oplus M_{C3} \oplus C_{C0} \oplus C_{C3} = 0 = K_1 & \text{ se deduce que } K_1 = 0.
+\end{cases}$$
+
+Como podemos ver, en los casos de mensaje-criptograma conocido, llegamos a la conclusión de que estadísticamente, la clave será $K = K_00K_0K_3$, es decir, las posibles claves serían $\{0000, 0001, 1010, 1011\}$ reduciéndose de 16 posibilidades a 4 a las cuáles habría que aplicar fuerza bruta.
+
+En el caso de las redes de sustitución-permutación, el esfuerzo se centra en descomponer las $S-box$, ya que suelen ser la única parte no lineal del algoritmo y una vez estudiada esta parte, se pueden aplicar las transformaciones lineales restantes a las fórmulas para obtener la general del algoritmo. Esto motiva al fortalecimiento especialmente de estas cajas en el desarrollo de nuevos sistemas criptográficos.
+
+Análogamente, esto se puede aplicar a cualquier sistema criptográfico que las utilice aunque no sea una red de sustitución-permutación. Algunos casos se producen en algoritmos basados en redes de Feistel, como son el \textit{DES}, \textit{Twofish} o \textit{MARS}, los cuales necesitan una cantidad muy elevada de parejas mensaje-criptograma siendo de $2^{47}$ parejas conocidas (\textit{known plaintext attack}) en el caso de \textit{DES} y superiores a $2^{100}$ parejas elegidas (\textit{chosen plaintext attack})\footnote{Nótese que los ataques con pareja elegida son más eficaces que los de pareja conocida pues se puede realizar un estudio de los resultados anteriores antes de elegir más parejas para examinar.} para \textit{Twofish} y \textit{MARS} \cite{DES_Lin, Twofish_attack}.
+
+\section{Criptoanálisis Diferencial}
+\label{sec:diffcrypto}
+El criptoanálisis diferencial es esencialmente el estudio de cómo afectan a un sistema criptográfico las variaciones de la entrada a su salida, y es utilizado principalmente para recuperar la clave principal empleada. Su principal aplicación reside en las técnicas de cifrado por bloques pero también se utiliza en cifrado por flujo o en funciones hash.
+
+El ataque consiste principalmente en que existen patrones de diferencias entre la entrada y su correspondiente salida que sólo ocurren para ciertos valores de la entrada, y si se comprueba la diferencia deseada en la salida, se aumenta la posibilidad de ciertas claves mientras se reduce la de otras. Aunque su contexto de trabajo más usual sean las parejas de mensaje-criptograma escogidas, algunos métodos permiten trabajar con parejas conocidas o incluso exclusivamente con criptogramas siempre y cuando se conozcan algunas características del mensaje (por ejemplo, que está escrito completamente en inglés con codificacion utf-8)\footnote{Este tipo de ataques se conoce como \textit{ciphertext-only attack}.}. 
+
+El método básico usa grupos de mensajes relacionados por una diferencia constante que, aunque puede ser definida de muchas maneras, suele emplear la operación xor. El ataque entonces calcula las diferencias de los correspondientres criptogramas en busca de patrones estadísticos en su distribución. Habitualmente, la diferencia entre mensajes se nota como diferencial de la entrada \textit{$\Delta_X$} mientras que la salida se suele notar como \textit{$\Delta_Y$}. El atacante analizará el par ($\Delta_X, \Delta_Y$) teniendo en cuenta que $\Delta_Y = F(X \oplus \Delta_X) \oplus F(X)$, donde $F$ es la función a analizar.
+
+De nuevo, este método se centra en descomponer la parte no lineal del sistema (que suelen ser las $S-box$ en los sistemas que las implementan), y después aplicarle las transformaciones lineales que requiera para comprobar que se cumplen los resultados esperados.
+
+La forma más básica de recuperar la clave a través del criptoanálisis diferencial consiste en que el atacante pide una gran cantidad de parejas de mensajes de las que asume que el diferencial se mantiene durante $r-1$ rondas siendo $r$ el número total de rondas. Entonces, se calculan las posibles claves de ronda que separa el resultado obtenido con el teórico que debería ir arrastrando hasta la ronda $r-1$. De este conjunto de claves ronda, si es pequeño, se calcula la probabilidad de cada clave mediante fuerza bruta utilizando una única ronda del algoritmo de descifrado y calculando el grado de aproximación. Si este grado es muy elevado, consideramos que la clave de ronda es la correcta y volvemos a empezar hasta llegar a la primera ronda.
+
+Tras la realización del estudio de la función, se espera encontrar muy frecuentemente un patrón en los criptogramas. De conseguirlo, podríamos diferenciar el comportamiento del algoritmo de un algoritmo aleatorio y determinar relaciones con la llave utilizada, reduciendo así considerablemente el ratio de búsqueda que tendríamos usando el método de fuerza bruta. Es por eso considerada una de las técnicas más poderosas en criptoanálisis junto con el análisis lineal. Por eso, todo sistema criptográfico moderno suele comprobar que es resistente a dicho análisis.
+
+
+Esta técnica requiere de $2^{47}$ parejas elegidas romper el sistema de \textit{DES}\footnote{Años más tarde de la publicación del \textit{DES}, cuando Eli Biham y Adi Shamir lo pusieron a prueba con el análisis diferencial, uno de sus desarrolladores confesó que \textit{DES} fue diseñado para resistir dicho análisis dado que IBM (la empresa que lo desarrolló) conocía la técnica de criptoanálisis aunque no la dieron a conocer \cite{DES_Diff2}.} \cite{DES_Diff} mientras que \textit{Twofish} requiere $2^{51}$ parejas elegidas para encontrar una buena pareja de diferencial a partir de los cuáles trabajar, dato que algunos consideran poco seguro aunque también hay quien manifiesta que es un valor muy elevado \cite{Twofish_attack}.
+
+Actualmente, se considera que la mejor forma de encontrar parejas de mensajes que produzcan patrones es mediante el análisis teórico de los mecanismos del algoritmo.
+
+\section{Criptoanálisis Diferencial-lineal}
+Como hemos podidos ver, las técnicas anteriores trabajan desde distintos puntos pero no por ello son mutuamente excluyentes. Por eso, surgió la idea de combinar ambos conceptos sobre el análisis de una sistema criptográfico, dando lugar a esta técnica.
+
+Aunque ha logrado mejores resultados que sus predecesores en \textit{DES}, \textit{FEAL} (una alternativa a \textit{DES} que surgió antes del \textit{AES process} y era ligeramente mejor pero no tuvo un uso estandarizado) y \textit{Serpent} no son suficientes para considerar que eran unos resultados significativos para estos sistemas \cite{Diff-Lin_Def}.
+
+Esta técnica no la veremos reflejada en el análisis posterior de los algoritmos pero me parecía que podía tener interés presentarla tras presentar a sus predecesoras.

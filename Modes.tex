@@ -1,0 +1,171 @@
+\chapter{Modos de operación}
+\label{chp:modes}
+
+Al trabajar con cifrado por bloques, no siempre tenemos que nuestro mensaje tiene la misma longitud que el bloque esperado por el sistema criptográfico. Por lo que, habitualmente necesitamos utilizar reiteradamente dicho sistema, suelen llamarse \textit{modos de operación}. Tras la aparición de \textit{DES}, se formalizaron cuatro modos de operación estándar: \textit{ECB, CBC, OFB, CFB} \cite{Crypto_Bases2}.
+
+Además, con el paso del tiempo fueron apareciendo algunos otros que tomaron popularidad como \textit{CTR} que permite simular el funcionamiento de un cifrado de flujo así como paralelizar enormemente el proceso y se realizaron modificaciones sobre estos como \textit{CBC-IGE} que es actualmente utilizado en el cifrado de Telegram \cite{TFG_M-Verona}.
+
+Sin embargo, la longitud del mensaje no siempre es la adecuado para usar el modo de operación deseado al no adecuarse a los tamaños requeridos. Debido a esto, frecuentemente se recurre a un proceso de rellenado reversible llamado \textit{padding}. Un ejemplo simple podría ser concatenar un \textit{1} seguido de tantos \textit{0's} como el modo de operación necesite.
+
+% Definición de lo que es un modo de operación
+
+\section{Electronic CodeBook}
+\label{sec:ECB}
+El modo \textit{Electronic Codebook} también conocido como \textbf{ECB} es el más simple de usar un cifrado por bloques y también el más simple de atacar.
+
+Consiste en dividir el mensaje en trozos del tamaño que tenga el tamaño de bloque del sistema criptográfico que vayamos a usar y hacerlos pasar por el cifrado.
+
+\begin{algorithm}[H]
+	\begin{algorithmic}[1]
+		\small
+		\REQUIRE \ \\
+			\texttt{$M$}, mensaje o plaintext con padding\\
+			\texttt{$K$}, clave utilizada\\
+			\texttt{$E_K$}, función de cifrado\\
+			\texttt{$n$}, tamaño de bloque de la función de cifrado\\
+		
+		\STATE{\texttt{$M = (M_0, M_1, \dots, M_r)$}, Dividimos $M$ en trozos de longitud $n$}
+		\FOR{\texttt{$i = 0 \rightarrow r$}}
+			\STATE{\texttt{$C_i = E_K(M_i, K)$}, ciframos $M_i$}
+		\ENDFOR
+		\RETURN{\texttt{($C = (C_0, C_1, \dots, C_r)$), Formamos el criptograma}}
+	\end{algorithmic}
+
+	\caption{Modo de operación ECB de cifrado.}
+	\label{alg:ECB}
+\end{algorithm}
+
+Nótese que el descifrado sería análogo intercambiando el criptograma $C$ por el mensaje $M$ y sustituyendo la función de cifrado $E$ por la de descifrado $D$.
+
+Frente a su gran ventaja de eficiencia, están algunos problemas destacables debidos a que cada bloque se cifra de manera independiente:
+\begin{itemize}
+	\item Si tenemos dos bloque del mensaje original que son iguales, sus bloques en el criptograma serán iguales.
+	\item Se puede eliminar un bloque sin que se detecte (Suponiendo que el mensaje modificado tiene sentido).
+	\item Si conocemos un bloque de otro mensaje, se puede insertar o modificar un bloque sin que se detecte (de nuevo, si conserva el sentido).
+\end{itemize}
+
+\section{Cipher Block Chaining}
+\label{sec:CBC}
+El modo \textit{Cipher Block Chaining} también conocido como \textbf{CBC} es considerado el mejor modo de usar un cifrado por bloques por su resistencia a los ataques. Esta resistencia se debe a que añade \textit{contexto} a cada bloque del criptograma, una propiedad que tienen los modos de operación que veremos a partir de ahora, solventando así los problemas vistos para \textbf{ECB}.
+
+Al igual que en \textbf{ECB}, partimos el mensaje en trozos del tamaño de bloque y los ciframos pero el criptograma se forma realizando un xor entre este cifrado y el criptograma anterior. Para el primer criptograma, se realiza un xor entre el cifrado del mensaje y un valor inicial \textbf{IV} aleatorio (si la clave se va a utilizar pocas veces, puede fijarse y enviarse públicamente junto con el criptograma).
+
+\begin{algorithm}[H]
+	\begin{algorithmic}[1]
+		\small
+		\REQUIRE \ \\
+			\texttt{$M$}, mensaje o plaintext con padding\\
+			\texttt{$K$}, clave utilizada\\
+			\texttt{$E_K$}, función de cifrado\\
+			\texttt{$n$}, tamaño de bloque de la función de cifrado\\
+			\texttt{$IV$}, valor inicial
+		
+		\STATE{\texttt{$M = (M_0, M_1, \dots, M_r)$}, Dividimos $M$ en trozos de longitud $n$}
+		\STATE{\texttt{$C_{-1} = IV$}}
+		\FOR{\texttt{$i = 0 \rightarrow r$}}
+			\STATE{\texttt{$C_i = E_K(M_i, K) \oplus C_{i-1}$}, ciframos $M_i$ y añadimos el contexto}
+		\ENDFOR
+		\RETURN{\texttt{($C = (C_0, C_1, \dots, C_r)$), Formamos el criptograma}}
+	\end{algorithmic}
+
+	\caption{Modo de operación CBC de cifrado.}
+	\label{alg:CBC}
+\end{algorithm}
+
+Nótese que el descifrado sería idéntico teniendo en cuenta que el inverso de aplicar el xor después de la función de cifrado $E$ es aplicar el xor antes que la función de descifrado $D$.
+
+Se puede observar entonces que un error en la transmisión del criptograma (por un ataque o por error de la red), afecta al bloque entero del plaintext asociado y además a los bits correspondientes del siguiente.
+
+%\subsection{Infinite garble extension}
+% Usado en Telegram, citar a Marta Verona
+
+\section{Output FeedBack}
+\label{sec:OFB}
+El modo \textit{Output Feedback} también conocido como \textbf{OFB} utiliza un cifrado por bloques simulando un cifrado de flujo.
+
+Este modo actúa dividiendo el bloque de entrada en trozos de longijud $j$ con $1 \leq j \leq n$ con $n$ el tamaño de bloque del sistema criptográfico, en los que usualmente se da la segunda igualdad. Toma también un valor inicial \textbf{IV} de tamaño $n$ que será el que pase reiteradamente por el algoritmo de cifrado (en este modo, no es necesario un algoritmo de descifrado) y se combina mediante un xor con el mensaje para formar el criptograma o con el criptograma para formar el mensaje. Dado que el valor inicial tiene tamaño $n$ y el mensaje o criptograma tiene $j$, se requiere de la función $left_i()$ que devuelve los $i-bits$\footnote{Nótese que esta notación es simplemente visual, en la implementación tiene más sentido que la función sea $left()$ y tome como entrada el número de bits y la cadena.} a la izquierda de su entrada.
+
+\begin{algorithm}[H]
+	\begin{algorithmic}[1]
+		\small
+		\REQUIRE \ \\
+			\texttt{$M$}, mensaje o plaintext con padding\\
+			\texttt{$K$}, clave utilizada\\
+			\texttt{$E_K$}, función de cifrado\\
+			\texttt{$j$}, tamaño de partición, menor o igual que el tamñao de bloque de la función de cifrado\\
+			\texttt{$IV$}, valor inicial
+		
+		\STATE{\texttt{$M = (M_0, M_1, \dots, M_r)$}, Dividimos $M$ en trozos de longitud $j$}
+		\STATE{\texttt{$X_{-1} = IV$}}
+		\FOR{\texttt{$i = 0 \rightarrow r$}}
+			\STATE{\texttt{$X_i = E_K(X_{i-1}, K)$}, generamos el siguiente estado}
+			\STATE{\texttt{$C_i = M_i \oplus left_j{X_i}$}, combinamos $M_i$ y los $j-bits$ más a la izquierda de $X_i$}
+		\ENDFOR
+		\RETURN{\texttt{($C = (C_0, C_1, \dots, C_r)$), Formamos el criptograma}}
+	\end{algorithmic}
+	\caption{Modo de operación OFB de cifrado.}
+	\label{alg:OFB}
+\end{algorithm}
+
+Como se puede notar, un error en la transmisión del criptograma afecta exclusivamente a los bits correspondientes del plaintext asociado, dejando así una pequeña resistencia a los ataques de inserción, borrado y reemplazo, y además, por la ausencia de función de descifrado, el algoritmo es idéntico tanto para cifrar como para descifrar y se basa en las propiedades de que $a \oplus b = b \oplus a$ y $a \oplus b \oplus a = b$.
+
+\section{Cipher FeedBack}
+\label{sec:CFB}
+El modo \textit{Cipher Feedback} también conocido como \textbf{CFB} también simula un cifrado de flujo usando uno por bloques.
+
+Es muy similar a \textbf{OFB} en tanto que simula un cifrado de flujo y que divide el mensaje en trozos de tamaño inferior o igual al tamaño de bloque pero con la particularidad de que el estado depende también del criptograma anterior. En este algoritmo, se aplican tanto la función $left_i()$ como $right_i()$.
+
+\begin{algorithm}[H]
+	\begin{algorithmic}[1]
+		\small
+		\REQUIRE \ \\
+			\texttt{$M$}, mensaje o plaintext con padding\\
+			\texttt{$K$}, clave utilizada\\
+			\texttt{$E_K$}, función de cifrado\\
+			\texttt{$j$}, tamaño de partición, menor o igual que el tamñao de bloque de la función de cifrado\\
+			\texttt{$IV$}, valor inicial
+		
+		\STATE{\texttt{$M = (M_0, M_1, \dots, M_r)$}, Dividimos $M$ en trozos de longitud $j$}
+		\STATE{\texttt{$X_{-1} = IV$}}
+		\FOR{\texttt{$i = 0 \rightarrow r$}}
+			\STATE{\texttt{$Y_i = E_K(X_{i-1}, K)$}, ciframos el estado}
+			\STATE{\texttt{$C_i = M_i \oplus left_j{Y_i}$}, combinamos $M_i$ y los $j-bits$ más a la izquierda de $Y_i$}
+			\STATE{\texttt{$X_i = right_{n-j}(Y_i) || C_i$}, generamos el siguiente estado}
+		\ENDFOR
+		\RETURN{\texttt{($C = (C_0, C_1, \dots, C_r)$), Formamos el criptograma}}
+	\end{algorithmic}
+
+	\caption{Modo de operación CFB de cifrado.}
+	\label{alg:CFB}
+\end{algorithm}
+
+Por la inclusión del criptograma anterior en el estado, un cambio en la transmisión del criptograma afecta a los bits correspondientes del plaintext y al bloque entero siguiente.
+
+\section{Counter}
+\label{sec:CTR}
+El modo \textit{Counter} también conocido como \textbf{CTR} y al igual que los anteriores, simula un cifrado de flujo con la diferencia de que permite el procesamiento en paralelo de los bloques.
+
+Este paralelismo se origina en la idea original del \textbf{ECB} con la inclusión de un estado que no depende de los pasos realizados anteriormente. En particular, el estado inicial es \textbf{IV} y el estado i-ésimo es \textbf{IV+i}. Este estado se cifra y se combina mediante un xor.
+
+\begin{algorithm}[H]
+	\begin{algorithmic}[1]
+		\small
+		\REQUIRE \ \\
+			\texttt{$M$}, mensaje o plaintext con padding\\
+			\texttt{$K$}, clave utilizada\\
+			\texttt{$E_K$}, función de cifrado\\
+			\texttt{$n$}, tamaño de bloque de la función de cifrado\\
+			\texttt{$IV$}, valor inicial\\
+		
+		\STATE{\texttt{$M = (M_0, M_1, \dots, M_r)$}, Dividimos $M$ en trozos de longitud $n$}
+		\FOR{\texttt{$i = 0 \rightarrow r$}}
+			\STATE{\texttt{$C_i = M_i \oplus E_K(IV+i, K)$}, combinamos $M_i$ y el estado.}
+		\ENDFOR
+		\RETURN{\texttt{($C = (C_0, C_1, \dots, C_r)$), Formamos el criptograma}}
+	\end{algorithmic}
+
+	\caption{Modo de operación CTR de cifrado.}
+	\label{alg:CTR}
+\end{algorithm}
+
+Por la inclusión de este estado tan trivial podemos observar que solventa los problemas de \textbf{ECB} pues se puede decir que ciframos la pareja (bloque, posición) independientemente dando lugar a que no pueden aparecer dos bloques iguales y no se puede borrar ni insertar pues modificaríamos la posición de los siguientes bloques. Lo único que se puede realizar es un ataque de sustitución pero sólo si se realiza en la misma posición, esto es, si conocemos el criptograma de un mensaje y queremos modificar la posición $i$-ésima de un criptograma que hemos interceptado, sólo podremos sustituirlo sin que se note por el $i$-ésimo del que conocemos, lo cuál limita muchísimo el ataque.

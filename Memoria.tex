@@ -1,0 +1,90 @@
+\documentclass[a4paper,12pt]{report}
+
+\usepackage[utf8]{inputenc}
+
+\usepackage[spanish,es-nodecimaldot,es-tabla]{babel}
+\usepackage[hidelinks]{hyperref}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\input{spanishAlgorithmic.tex}
+
+%% Definiciones etc
+\newtheorem{thm}{Teorema}
+\newtheorem{lemma}{Lema}
+\newtheorem{corollary}{Corolario}
+\theoremstyle{definition}
+\newtheorem{dfn}{Definición}
+\newtheorem{alg}{Algoritmo}
+\newtheorem{example}{Ejemplo}
+
+\title{Advanced Encryptation Standard process}
+\author{Óscar Bermúdez Garrido}
+\date{}
+
+\begin{document}
+%% Sample title page taken from Wikibooks/Latex
+%% https://en.wikibooks.org/wiki/LaTeX/Title_Creation
+
+\begin{titlepage}
+  \centering
+  \includegraphics[width=0.4\textwidth]{Images/logo_UGR.png}
+  \par\vspace{0.5cm}
+  {\scshape\Large Trabajo de Fin de Grado \par}
+  \vspace{0.5cm}
+  {\scshape\large Doble Grado en Ingeniería Informática y Matemáticas\par}
+  \vspace{1cm}
+  {\Large\bfseries Advanced Encryptation Standard process\par}
+  \vspace{0.5cm}
+  {\Large\itshape Óscar Bermúdez Garrido\par}
+  \vfill
+  Tutor:\par
+  Pedro Abelardo \textsc{García Sánchez}\par
+
+  \vfill
+
+  % Bottom of the page
+  {\large \today \par}
+\end{titlepage}
+
+\include{Abstracts}
+
+\begin{titlepage}
+  {\huge \bfseries Agradecimientos}
+  \vspace{1cm}
+
+  Me gustaría agradecer a la Universidad de Granada y sus profesores por la formación adquirida y a mi tutor, Pedro, por resolverme de forma muy eficiente las dudas que le he planteado y la paciencia que ha tenido, que no ha sido poca. Por último, pero no por ello menos importante, agradecer a mi familia y amigos que me han animado durante el transcurso.
+\end{titlepage}
+
+\pagenumbering{gobble}
+
+\tableofcontents
+\pagebreak
+
+\pagenumbering{arabic}
+
+\include{Introduccion}
+
+\include{MarcoTeorico}
+
+\include{Criptoanalisis}
+
+\include{Modes}
+
+\include{Finalists}
+
+\include{Conclusion}
+
+\include{Bibliografia}
+
+%
+%
+%\clearpage%
+%\addcontentsline{toc}{chapter}{Bibliografía}
+%
+\end{document}

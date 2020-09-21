@@ -1,0 +1,554 @@
+\chapter{Algoritmos finalistas}
+\label{chp:finalists}
+
+En este capítulo, daremos un breve repaso a lo que fue el \textit{AES process}, conoceremos a fondo algunos de sus finalistas y veremos cuáles son sus fortalezas junto con sus debilidades.
+
+\section{AES process}
+\label{sec:AES}
+Motivado por la necesidad de encontrar una alternativa viable y segura al sistema \textit{DES}, el Instituto Nacional de Estándares y Tecnología(\textit{NIST}) de los Estados Unidos proclamó en enero de 1997 la búsqueda de un nuevo sistema criptográfico por bloques que lo sustituyera.
+
+Gran parte de los criterios del propio concurso fueron motivados por las propias características del \textit{DES}. Los criterio fueron:
+\begin{itemize}
+	\item Aceptar un tamaño de bloque de 128 bits. Esto se debe a que se sospechaba que el tamaño de bloque del \textit{DES} que era de 64 bits podía dar problemas de seguridad en el futuro como se está viendo actualmente. Cabe destacar también que estos problemas son menos relevantes que los acarreados por el tamaño de clave.
+
+	\item Aceptar un tamaño de clave de 128, 192 y 256 bits, motivado porque la clave de \textit{DES} que era de tan sólo 56 bits quedaba muy expuesta a un ataque por fuerza bruta. De este modo, por tener una clave de 128 bits ya se fortalecería bastante el algoritmo respecto a este caso pero, en caso de que en el futuro también fuese fácil de atacar, se podría sustituir por las variantes de 192 ó 256 bits sin necesidad de buscar un nuevo estándar.
+	
+	\item Ser accesible públicamente. Una de las principales acusaciones que recibió \textit{DES} fue la de que sus $S-boxes$, al haberse mantenido ocultas durante mucho tiempo, contenían una puerta trasera que debilitaría el algoritmo si se encontraba. Además, el acceso público permitiría a la comunidad detectar posibles fisuras por las que tener acceso a la clave o al \textit{plaintext} y solventarlas lo más eficientemente posible.
+	
+	\item Ser de dominio público dado que su fin era ser implementado en todos los sistemas operativos tanto de ordenadores como de sistemas empotrados que lo necesitasen para su correcto funcionamiento. Esto requería que no se le impusieran costes por derechos de autor, que frenarían tanto su implantación como su estandarización.
+	
+	\item Tener eficiencia tanto en su implementación hardware como en su implementación software. Como el sistema \textit{DES} fue diseñado para su implementación en hardware, lograba grandes prestaciones en esta vía dejando muchas carencias en su implementación software. Esto se vio además acentuado en las alternativas que surgieron a partir de él, especialmente el \textit{Triple DES}\footnote{El \textit{Triple DES} consiste en ejecutar tres veces el cifrado para un mensaje y correspondientemente tres veces el descifrado, tenía principalmente dos vertientes:
+	\begin{itemize}
+		\item Utilizar 3 claves distintas, una para cada cifrado y descifrado.
+		\item Utilizar 2 claves distintas, usando la misma clave tanto en el primer como en el último cifrado y descifrado.
+	\end{itemize}} pues esencialmente era ejecutar \textit{DES} varias veces.
+\end{itemize}
+
+Los algoritmos que se presentaron al concurso fueron: CAST-256, CRYPTON, DEAL, DFC, E2, FROG, HPC, LOKI97, MAGENTA, MARS, RC6, Rijndael, SAFER+, Serpent y Twofish.
+
+Tras el estudio en una conferencia en 1998 de sus propiedades, tanto criptográficas como de eficiencia incluso en sistemas con pocos recursos como \textit{FPGAs}, se destacaron cinco finalistas por sus resistencia al criptoanálisis y su correcta eficiencia en la mayoría de las plataformas testeadas.
+
+Estos finalistas fueron:
+\begin{itemize}
+	\item \textit{MARS}
+	\item \textit{RC6}
+	\item \textit{Rijndael}
+	\item \textit{Serpent}
+	\item \textit{Twofish}
+\end{itemize}
+
+En una segunda conferencia en 1999, se realizó una votación sobre los finalistas en la cuál se votaron tanto de forma positiva como negativa a los candidatos. En esta votación, \textit{Rijndael} consiguió el mayor número de votos positivos mientras que \textit{Serpent} fue el que menos votos negativos tuvo.
+
+Dado que el margen de votos positivos fue muy grande y la eficiencia era mejor, \textit{Rijndael} fue elegido como el actual \textit{AES} en octubre de 2000 pero no fue oficial febrero de 2001, tras publicarlo en el Registro Federal. 
+
+Esta elección fue un poco controvertida pues \textit{Rijndael} obtuvo sólo una calificación de tener un margen de seguridad adecuado mientras que \textit{Serpent}, \textit{Twofish} y \textit{MARS} se consideró que tenían un alto margen de seguridad, aunque eran más precarios en eficiencia. Sin embargo, el ambiente general de la comunidad fue positivo porque tanto todo el proceso como el propio algoritmo fueron públicos, alejándose de la oscuridad que rodeó las $S-boxes$ de \textit{DES} \cite{AES_process} \cite{Rijndael_AES_process}.
+
+\section{Rijndael}
+\label{sec:Rijndael}
+El sistema criptográfico de Rijndael fue desarrollado por Vincent Rijmen y Joan Daemen, basado principalmente en redes de sustitución-permutación y con base en la teoría de Galois para proporcionar robustez en las operaciones de mezclar columnas y en las $S-boxes$.
+
+En 1997, los mismos autores publicaron \textit{Square} \cite{Square_Official} del cuál emergió más tarde \textit{Rijndael}. Este algoritmo estaba basado también en una red de sustitución-permutación con 8 rondas y 128 bits de tamaño de bloque y de clave, y fue considerado uno de los favoritos para ganar el concurso del \textit{AES}\cite{Square_Wiki}.
+
+Al ser elegido como el algoritmo que se convirtió en estándar, la mayor parte de las aplicaciones actuales lo utilizan.
+Como menciones de honor podemos destacar \textit{openssl} utilizado en gran parte de los servidores, \textit{7-Zip} generalmente utilizada para comprimir archivos, \textit{Bitlocker} que nos permite cifrar nuestro sistema de ficheros y el cliente de \textit{Wazuh}, una empresa especializada en ciberseguridad.
+Existen librerías en C\cite{Crypto} y Java principlamente pero también se han realizado implementaciones particulares en ruby, python, perl, \dots\cite{Implementations}
+
+\subsection{Algoritmo}
+El algoritmo suele trabajar con la entrada tratándola como una matriz sobre la que realiza sus operaciones. Originalmente, el algoritmo permitía libertad en la elección del tamaño del bloque y de la clave de 128, 192 y 256 bits pero las condiciones del concurso limitaron el uso del tamaño de bloque a 128 bits.
+
+El esqueleto principal de \textit{Rijndael} sería (\ref{alg:Rijndael})\cite{Rijndael_specs}\cite{Rijndael_AES}:
+\begin{algorithm}[H]
+	\begin{algorithmic}[1]
+		\REQUIRE \ \\
+			\texttt{$P$}, plaintext\\
+			
+		\STATE{\texttt{$B = AddRoundKey(P, K_0)$}, esta función realmente hace $P \oplus K_0$.}
+		\FOR{\texttt{$i = 1 \rightarrow n$}}
+			\STATE{\texttt{$B = SubBytes(B)$},}
+			\STATE{\texttt{$B = ShiftRows(B)$},}
+			\IF{\texttt{$i \neq n$}}
+				\STATE{\texttt{$B = MixColumns(B)$}, esta operación no se realiza en la última ronda}
+			\ENDIF
+			\STATE{\texttt{$B = AddRoundKey(B, K_i)$},}
+		\ENDFOR
+		\RETURN{\texttt{$C = B$}}
+	\end{algorithmic}
+	\caption{Algoritmo de Rijndael presentado al AES.}
+		\label{alg:Rijndael}
+\end{algorithm}
+
+Cabe destacar que \textit{Rijndael} tiene un número de rondas distinto para cada tamaño de clave, siendo de 10 rondas para 128 bits, 12 para 192 bits y 14 para 256 bits\cite{Rijndael_specs}.
+
+La función de \textit{SubBytes} es la $S-box$ de la red, convierte su entrada en el polinomio asociado dentro del cuerpo $\textit{GF}(2^8) = \textit{GF}(2)[x]/(x^8+x^4+x^3+x+1)$, que podemos comprobar que es un cuerpo de Galois y que el polinomio es irreducible en $F_2[X]$. Una vez transformado a su polinomio asociado, se calcula su inversa\footnote{En el caso de que el polinomio asociado fuese 0, se considera que es su propia inversa por convenio.}, se vuelve a pasar a su forma de representación binaria y se hace pasar por la transformación afín:
+$$\begin{bmatrix}
+    s_0 \\
+    s_1 \\
+    s_2 \\
+    s_3 \\
+    s_4 \\
+    s_5 \\
+    s_6 \\
+    s_7 \\
+\end{bmatrix} =
+\begin{bmatrix}
+    1 & 0 & 0 & 0 & 1 & 1 & 1 & 1 \\
+    1 & 1 & 0 & 0 & 0 & 1 & 1 & 1 \\
+    1 & 1 & 1 & 0 & 0 & 0 & 1 & 1 \\
+    1 & 1 & 1 & 1 & 0 & 0 & 0 & 1 \\
+    1 & 1 & 1 & 1 & 1 & 0 & 0 & 0 \\
+    0 & 1 & 1 & 1 & 1 & 1 & 0 & 0 \\
+    0 & 0 & 1 & 1 & 1 & 1 & 1 & 0 \\
+    0 & 0 & 0 & 1 & 1 & 1 & 1 & 1 \\
+\end{bmatrix} \cdot
+\begin{bmatrix}
+    b_0 \\
+    b_1 \\
+    b_2 \\
+    b_3 \\
+    b_4 \\
+    b_5 \\
+    b_6 \\
+    b_7 \\
+\end{bmatrix} +
+\begin{bmatrix}
+    1 \\
+    1 \\
+    0 \\
+    0 \\
+    0 \\
+    1 \\
+    1 \\
+    0 \\
+\end{bmatrix}$$
+
+Por la estructura de grupo sobre la que se construye, unida a la transformación afín, se consigue la fortaleza de la $S-box$ frente a los ataques del criptoanálisis lineal, logrando un alto valor de difusión, asi como minimizar la posibilidad de propagación de diferencias, buscada por el análisis diferencial\cite{Rijndael_design}.
+
+La función de \textit{ShiftRows} realiza un ciclo distinto a cada fila sobre la matriz que recibe de la función anterior, este ciclo es muy fácil de implementar pues sería (\ref{alg:Rijndael_ShiftRows}):
+
+\begin{algorithm}[H]
+	\begin{algorithmic}[1]
+		\REQUIRE \ \\
+			\texttt{$R_0, R_1, R_2, R_3$}, Filas de la matriz\\
+		\FOR{\texttt{$i \rightarrow 3$}}
+			\STATE{\texttt{$R_i = R_i <<< i$}}
+		\ENDFOR
+	\end{algorithmic}
+	\caption{Transformación lineal de la función ShiftRows.}
+		\label{alg:Rijndael_ShiftRows}
+\end{algorithm}
+
+Nótese que la operación $M <<< n$ representa el desplazamiento cíclico de $n$ bits a la izquierda de la variable $M$, esto es, los bits que estaban en el extremo izquierdo vuelven al extremo derecho, a diferencia de cómo funcionaría el desplazamiento a izquierda respresentado por $M << n$ que rellenaría los huecos con 0's. Análogamente, se notan $M >>> n$ el desplazamiento cíclico a la derecha y $M >> n$ el desplazamiento a la derecha, que rellena completando el signo.
+
+La función de \textit{MixColumns} vuelve a hacer uso de la teoría de Galois para, tras convertir cada columna en un polinomio de la forma $p(x) = ax^3 + bx^2 + cx + d$ donde $a, b, c, d \in \textit{GF}(2^8)$ son los coeficientes de las columnas, se multiplica con un polinomio constante $q(x) = 3x^3 + x^2 + x + 2$ y se reduce módulo $x^4 + 1$ obteniendo de nuevo un polinomio de cuatro términos que será devuelto. Aunque en la teoría se realiza esta operación, en la práctica se memoriza una matriz que realiza la misma acción y se aplica a cada columna de la forma:
+
+$$\begin{bmatrix}
+    s_0 \\
+    s_1 \\
+    s_2 \\
+    s_3 \\
+\end{bmatrix} =
+\begin{bmatrix}
+    2 & 3 & 1 & 1 \\
+    1 & 2 & 3 & 1 \\
+    1 & 1 & 2 & 3 \\
+    3 & 1 & 1 & 2 \\
+\end{bmatrix} \cdot
+\begin{bmatrix}
+    b_0 \\
+    b_1 \\
+    b_2 \\
+    b_3 \\
+\end{bmatrix}$$
+
+Las principales fuentes de difusión de este algoritmo son la función \textit{MixColumns} y \textit{ShiftRows}.\cite{Rijndael_design}.
+
+\subsection{Criptoanálisis}
+Al ser el estándar actual, \textit{Rijndael} ha sufrido más ataques que el resto de finalistas, aunque la mayor parte de los mismos se enfocaban a la implementación que al propio algoritmo aprovechando fallos en los lenguajes utilizados o bien directamente en su código.
+
+Para el análisis diferencial, tenemos que la función no lineal de \textit{Rijndael} tiene una probabilidad diferencial máxima de $\frac{4}{256}$, lo que quiere decir que teóricamente se podría determinar la clave como mucho con la mitad de esfuerzo que usando fuerza bruta. Sin embargo, la elevada ramificación del sistema \textit{Rijndael} evita que cualquier traza con alta probabilidad de encontrar patrones persista varias rondas. De hecho, si sólo contáramos 8 rondas del mismo, la difusión generada por las $S-boxes$ requeriría de más de 50 transformaciones no lineales, es decir, la probabilidad de éxito sería de $\left(\frac{4}{256}\right)^{50} = 2^{6 \cdot 50} < 2^{-128}$, que sería el umbral máximo para considerar seguro un criptograma que usa 128 bits de tamaño de bloque. \cite{Rijndael_crypto}
+
+Aunque su seguridad es suficiente, no es el finalista que mejor soporta los ataques criptográficos debido a que, al contrario de la mayoría de ellos, centró sus esfuerzos en ser rápido y liviano para todo tipo de sistemas a la vez que proporcionaba la seguridad necesaria\cite{Rijndael_design}. Esto se puede ver reflejado en su implementación en una FPGA\cite{FPGA_Finalists}, que logra almacenar la clave en un tamaño muy reducido mientras consigue una velocidad de sólo 6 ciclos por bloque de cifrado a pesar de no disponer de una estructura fácilmente paralelizable como \textit{Serpent}.
+
+\section{Serpent}
+\label{sec:serpent}
+El sistema criptográfico \textit{Serpent} fue diseñado por Ross Anderson, Eli Biham y Lars Knudsen para poderse ejercutar totalmente en paralelo, usando bloques de 32 bits. Un problema de este método de trabajo es que permite el uso del extensivo trabajo de criptoanálisis empleado sobre \textit{DES}, que aunque para él no fuera peligroso pues un ataque de fuerza bruta era mejor, al principio se pensó que sí que podría suponer un problema en su seguridad.
+
+Sin embargo, \textit{Serpent} fue desarrollado de una manera muy cauta, optando por buscar un gran margen de seguridad. Tal es este extremo que si el algoritmo tuviese la mitad de rondas que tiene, seguiría siendo suficientemente seguro para el sistema criptográfico de 128 bits de tamaño de bloque. Este margen fue impuesto para prevenir que el futuro descubrimiento de técnicas en el campo del criptoanálisis no debilitaran al sistema.
+
+De hecho, \textit{Serpent}, \textit{MARS} y \textit{Twofish} fueron reconocidos como cifrados con un alto margen de seguridad mientras que \textit{Rijndael} y \textit{RC6} tenían un margen adecuado. Posiblemente por ello, \textit{Serpent} fue el algoritmo menos criticado en la votación del segundo congreso.\cite{AES_process}
+
+Aunque se ha desarrollado de manera particular en muchos lenguajes diferentes, como python, java, go, \dots , no se ha extendido su uso mediante la inclusión en las librerías de la mayoría de los lenguajes. La librería donde mejor documentada está su integración es \textit{Crypto++}\cite{Crypto} de C++\cite{Implementations}.
+
+Cabe destacar también su vinculación con el proyecto \textit{GNU}, que lo incorporó como uno de sus estándares y su integración junto con \textit{Twofish} en el software de \textit{OSSEC}.
+
+\subsection{Algoritmo}
+El algoritmo de cifrado se compone de una red de sustitución-permutación de 32 rondas que realiza una permutación inicial $IP$, realiza 32 rondas en las que se mezcla la llave, se utilizan 8 $S-boxes$ diferentes y se pasa por aplicación lineal $L$ salvo en la último ronda, y finalmente se realiza una permutación final $FP$ que es la inversa de $IP$ (\ref{alg:Serpent}):
+
+\begin{algorithm}[H]
+	\begin{algorithmic}[1]
+		\REQUIRE \ \\
+			\texttt{$P$}, plaintext\\
+			
+		\STATE{\texttt{$B_0 = IP(P)$}, permutación inicial.}
+		\FOR{\texttt{$i = 0 \rightarrow 31$}}
+			\STATE{\texttt{$B' = S_{i \mod 8}[B_i \oplus K_i]$}, mezclamos la clave y calculamos la salida de la $S-box$.}
+			\IF{\texttt{$i \equiv 31$}}
+				\STATE{\texttt{$B_{i+1} = B' \oplus K_{32}$}, última ronda.}
+			\ELSE
+				\STATE{\texttt{$B_{i+1} = L(B')$}, ronda normal.}
+			\ENDIF
+		\ENDFOR
+		\STATE{\texttt{$C = FP(B_{32})$}, permutación final.}
+		\RETURN{\texttt{$C$}}
+	\end{algorithmic}
+	\caption{Algoritmo de Serpent presentado al AES.}
+		\label{alg:Serpent}
+\end{algorithm}
+
+Las $S-boxes$ se inicializan usando el siguiente algoritmo a partir de las $S-boxes$ de \textit{DES}\cite{DES_Boxes} almacenada inicialmente en el array $sbox$ (\ref{alg:Serpent_boxes}):
+
+\begin{algorithm}[H]
+	\begin{algorithmic}[1]
+		\REQUIRE \ \\
+			
+		\STATE{\texttt{$index = 0$}, índice.}
+		\STATE{\texttt{Número de $S-Boxes = 0$}, $S-Boxes$ calculadas.}
+		\WHILE{\texttt{Número de $S-Boxes < 8$}}
+			\STATE{\texttt{$currentSbox = index \mod 32$}, Tomamos una $S-box$ de \textit{DES}.}
+			\FOR{\texttt{$i \rightarrow 15$}}
+				\STATE{\texttt{$j = sbox[currentsbox+1 \mod 32][serpent[i]]$}, Tomamos un nuevo índice tomado del array $sbox$.}
+				\STATE{\texttt{$swap (sbox[currentsbox][i], sbox[currentsbox][j]$}, Modificamos $sbox$.})
+			\ENDFOR
+			\IF{\texttt{$sbox[currentsbox]$ tiene buenas propiedades de difusión}}
+				\STATE{\texttt{Guardamos $sbox[currentsbox]$ como $S_{\text{Número de } S-Boxes}$}}
+				\STATE{\texttt{Número de $S-Boxes++$}, incrementamos la variable.}
+			\ENDIF
+			\STATE{\texttt{$index++$}, incrementamos la variable.}
+		\ENDWHILE
+	\end{algorithmic}
+	\caption{Generación de $S-boxes$ en el algoritmo Serpent.}
+		\label{alg:Serpent_boxes}
+\end{algorithm}
+
+Nótese que $serpent$ es una array de constantes que cumplen que $serpent[i]$ está fijado al valor de los 4 bits menos significativos de la letra i-ésima del texto \textit{sboxesforserpent}. Además, la transformación lineal $L$ fue desarrollada para producir aún más difusión y, aunque se suele usar la tabla del apéndice que podemos encontrar en \cite{Serpent_AES}.
+
+Sin embargo, una variante de \textit{Serpent} fue desarrollada para poder ejecutarse completamente en paralelo, que esencialmente hace que la transformación lineal se tenga que expresar como (\ref{alg:Serpent_linear}):
+\begin{algorithm}[H]
+	\begin{algorithmic}[1]
+		\REQUIRE \ \\
+			\texttt{$(X_0, X_1, X_2, X_3) = S_i(B_i \oplus K_i)$}, salida de la $S-box$ descompuesta en 4 partes\\
+		\STATE{\texttt{$X_0 = X_0 <<< 13$}}
+		\STATE{\texttt{$X_2 = X_2 <<< 3$}}
+		\STATE{\texttt{$X_1 = X_1 \oplus X_0 \oplus X_2$}}
+		\STATE{\texttt{$X_3 = X_3 \oplus X_2 \oplus (X_0 << 3)$}}
+		\STATE{\texttt{$X_1 = X_1 <<< 1$}}
+		\STATE{\texttt{$X_3 = X_3 <<< 7$}}
+		\STATE{\texttt{$X_0 = X_0 \oplus X_1 \oplus X_3$}}
+		\STATE{\texttt{$X_2 = X_2 \oplus X_3 \oplus (X_1 << 7)$}}
+		\STATE{\texttt{$X_0 = X_0 <<< 5$}}
+		\STATE{\texttt{$X_2 = X_2 <<< 22$}}
+		
+		\RETURN{\texttt{$B_{i+1} = (X_0, X_1, X_2, X_3)$}}
+	\end{algorithmic}
+	\caption{Transformación lineal del algoritmo Serpent completamente paralelizable.}
+		\label{alg:Serpent_linear}
+\end{algorithm}
+
+El propósito de estas operaciones que aparecen reiteradas veces en el algoritmo es fortalezarlo con pseudo-aleatoriedad.\cite{Serpent_AES}
+
+\subsection{Criptoanálisis}
+Dado que \textit{Serpent} usa al menos una $S-box$ en cada ronda pero que suelen usar dos en media, y que cada vez que una diferencia pasa por una $S-box$ genera al menos dos diferencias en la salida gracias a sus propiedades de difusión, produce un cambio total de $2^r$ cambios, con $r$ el número de rondas, en el caso mínimo pero produce $2^{2 \cdot r}$ en el caso medio.
+
+Si obviamos las transformaciones lineales, que aumentan la difusión, y asumimos que existe una probabilidad de $\frac{1}{4}$ de conservar un patrón de comportamiento en el sistema de cifrado entre rondas, que es un caso bastante nefasto. Entonces, tenemos que la probabilidad de detectar una característica que se mantiene durante 6 rondas está acotada por $2^{-58}$, haciendo así que la probabilidad de encontrar para 24 rondas sea de $\left(2^{-58}\right)^4 < 2^{-128}$, lo que significa que requeriría de más parejas conocidas de las que existirían para poder romperlo mediante este criptoanálisis
+
+Desde el punto de vista del criptoanálisis linea, es posible encontrar relaciones bit a bit dentro de las \textit{$S-boxes$} por su método de construcción, aunque dichas relaciones requerirían de $2^{114}$ parejas conocidas para poder encontrar una expresión a lo largo de 28 rondas con probabilidad $\frac{1}{2}$. Sin embargo, dado que \textit{Serpent} no utiliza una única \textit{$S-box$}, la probabilidad desciende exponencialmente por cada ronda. En particular, se requerirían al menos $2^{218}$ parejas para lograr realizar un ataque sobre 24 rondas, y se estima que serían necesarias $2^{240}$ parejas para 28 rondas, lo cuál hace que la vía lineal sea impracticable.\cite{Serpent_AES}
+
+Recientemente, se han logrado romper 12 rondas de este sistema usando $2^{118}$ parejas conocidas, lo que nos da un valor muy cercano al mínimo necesario $2^{128}$ para considerar el algoritmo seguro, y eso sólo con menos de la mitad de las rondas.
+
+En los análisis realizados en un FPGA\cite{FPGA_Finalists} podemos ver que es el algoritmo más veloz en los ciclos necesarios para la encriptación de bloques debido que estas plataformas son muy potentes si el algoritmo es paralelizable como es el caso de \textit{Serpent}, con tan sólo 4 ciclos pero a su vez, debido a la cantidad de rondas que requiere, el espacio necesario que necesita para almacenar las claves de ronda es significativamente elevado comparado a sus competidores, triplicando el espacio del resto. Esto nos permite comprobar que el algoritmo es altamente eficiente si el dispositivo puede paralelizar sus acciones y tienen suficientes recursos para soportar la carga de las claves de ronda.
+
+\section{MARS}
+\label{sec:MARS}
+
+El sistema criptográfico \textit{MARS} fue el participante con la mayor relación con el antiguo estándar \textit{DES}, ya que fue desarrollado también por \textit{IBM} e incluso contaba con uno de sus mismos desarrolladores, \textit{Don Coppersmith}. Fue diseñado en un estructura de capas con el propósito de resistir nuevos avances criptográficos como certificaron durante la votación del segundo congreso.\cite{AES_process}
+
+Es considerado demasiado complejo y poco elegante, por lo que carece de aplicaciones significativas. Sin embargo, está integrado dentro de la librería \textit{Crypto++}\cite{Crypto} de C++\cite{Implementations}.
+
+\subsection{Algoritmo}
+\textit{MARS} tiene un tamaño de bloque de 128 bits y su diseño original permite tamaños de clave desde 128 hasta 448 bits, de los cuáles se presentó al concurso con menos posibles valores.
+
+A diferencia de los algoritmos vistos anteriormente, \textit{MARS} está basado en redes de Feistel. En particular, se compone de lo que se conoce como una red Feistel de tipo 3 cuyo pseudocódigo sería (\ref{alg:feistel3}):
+
+\begin{algorithm}[H]
+	\begin{algorithmic}[1]
+		\REQUIRE \ \\
+			\texttt{$A_0, B_0, C_0, D_0$}, plaintext dividido en 4 partes\\
+		\FOR{\texttt{$i = 0 \rightarrow n$}}
+			\STATE{\texttt{$D_{i+1} = A_i$}, esta parte pasa sin modificar.}
+			\STATE{\texttt{$F_1, F_2, F_3 = F(A_i, K_i)$}, dividimos la salida de la función de Feistel en 3 partes.}
+			\STATE{\texttt{$C_{i+1} = D_i \oplus F_3 \qquad$} en el resto, se combinan}
+			\STATE{\texttt{$B_{i+1} = C_i \oplus F_2 \qquad$} los valores antiguos con la}
+			\STATE{\texttt{$A_{i+1} = B_i \oplus F_1 \qquad $} salida de la función de Feistel.}
+		\ENDFOR
+		
+		\RETURN{\texttt{($A_{n+1}, B_{n+1}, C_{n+1}, D_{n+1}$)}}
+	\end{algorithmic}
+	\caption{Redes de Feistel de tipo 3.}
+	\label{alg:feistel3}
+\end{algorithm}
+
+El algoritmo de \textit{MARS} consiste en 3 partes\cite{MARS_AES} (\ref{alg:MARS}):
+\begin{itemize}
+	\item \textit{Forward Mixing}, tiene 8 rondas que consisten en una serie de transformaciones lineales que favorecen la difusión.
+	\item \textit{Cryptographic Core}, tiene 16 rondas y se basa en la red de Feistel de tipo 3 vista (\ref{alg:feistel3}) pero con ligeras modificaciones realizadas para mejorar tanto la confusión como la difusión.
+	\item \textit{Backward Mixing}, tiene 8 rondas que invierten las transformaciones lineales desarrolladas en el \textit{Forward Mixing}.
+\end{itemize}
+
+\begin{algorithm}[H]
+	\begin{algorithmic}[1]
+		\small
+		\REQUIRE \ \\
+			\texttt{$A, B, C, D$}, plaintext dividido en 4 partes de 32 bits\\
+			\texttt{$K$}, clave expandida compuesta de 40 partes de 32 bits\\
+		
+		\STATE{\texttt{$(A,B,C,D) = (A,B,C,D) + (K[0],K[1],K[2],K[3])$}, \textit{Key whitening}}
+		\FOR{\texttt{$i = 0 \rightarrow 7$}}
+			\STATE{\texttt{$B = B \oplus S_0[A] + S_1[A >>> 8]$}, calculamos el nuevo B}
+			\STATE{\texttt{$C = C + S_0[A >>> 16]$}, calculamos el nuevo C}
+			\STATE{\texttt{$D = D \oplus S_1[A >>> 24]$}, calculamos el nuevo D}
+			\STATE{\texttt{$A = (A >>> 24)$}, calculamos el nuevo A}
+			\IF{\texttt{$i \in \{1 , 5\}$}}
+				\STATE{\texttt{$A = A + B$}, calculamos el nuevo A}
+			\ELSIF{\texttt{$i \in \{0 , 4\}$}}
+				\STATE{\texttt{$A = A + D$}, calculamos el nuevo A}
+			\ENDIF
+			\STATE{\texttt{$(A,B,C,D) = (B,C,D,A)$}, los reubicamos en su correcta posición}
+		\ENDFOR
+		
+		\FOR{\texttt{$i = 0 \rightarrow 15$}}
+			\STATE{\texttt{$R = ((A<<<13) \cdot K[2 \cdot i + 5]) <<< 10$}, incrementamos la confusión.} 
+			\STATE{\texttt{$M = (A + K[2 \cdot i + 4]) <<< ((R >>> 5) \wedge 0x1F)$}, incrementamos la confusión.}
+			\STATE{\texttt{$L = (S[M] \oplus (R >>> 5) \oplus R) <<< (R \wedge 0x1F)$}}
+			\IF{\texttt{$i < 8$}}
+				\STATE{\texttt{$B = B + L$}, calculamos el nuevo B}
+				\STATE{\texttt{$D = D \oplus R$}, calculamos el nuevo D}
+			\ELSE
+				\STATE{\texttt{$B = B \oplus R$}, calculamos el nuevo B}
+				\STATE{\texttt{$D = D + L$}, calculamos el nuevo D}
+			\ENDIF
+			\STATE{\texttt{$C = C + M$}, calculamos el nuevo C}
+			\STATE{\texttt{$(A, B, C, D) = (B, C, D, A <<< 13)$}, calculamos el nuevo A y reubicamos}
+		\ENDFOR
+		
+		\FOR{\texttt{$i = 7 \rightarrow 0$}}
+			\IF{\texttt{$i \in \{1 , 5\}$}}
+				\STATE{\texttt{$A = A - D$}, restauramos el antiguo A}
+			\ELSIF{\texttt{$i \in \{0 , 4\}$}}
+				\STATE{\texttt{$A = A - B$}, restauramos el antiguo A}
+			\ENDIF
+			\STATE{\texttt{$B = B \oplus S_1[A]$}, restauramos el antiguo B}
+			\STATE{\texttt{$C = C - S_0[A <<< 8]$}, restauramos el antiguo C}
+			\STATE{\texttt{$D = (D - S_1[A <<< 16]) \oplus S_0[A <<< 24]$}, restauramos el antiguo D}
+			\STATE{\texttt{$(A, B, C, D) = (B, C, D, A <<<24)$}, reestableclemos las posiciones}
+		\ENDFOR
+		
+		\STATE{\texttt{$(A,B,C,D) = (A,B,C,D) - (K[36],K[37],K[38],K[39])$}, \textit{Key whitening}}
+		\RETURN{\texttt{($A, B, C, D$)}}
+	\end{algorithmic}
+
+	\caption{Algoritmo de MARS presentado al AES.}
+	\label{alg:MARS}
+\end{algorithm}
+
+Las operaciones cíclicas que aparecen reiteradas veces en el algoritmo con el propósito de fortalezar el algoritmo con pseudo-aleatoriedad, que es el mismo sentido por el cuál aparecen los condicionales.
+
+Cabe destacar también que $S_0$ y $S_1$ son las mitades de $S$, la $S-box$ de \textit{MARS}, que al componerse de 512 entradas de 32 bits, se divide para facilitar el trabajo con ella. Dichos valores están fijados para aumentar la fortaleza del algoritmo sin justificar su elección, como hizo \textit{DES} cuando fue presentado. Podemos encontrarla al final de \cite{MARS_Alg}.
+
+Aunque a primera vista no parezca que el \textit{Forwarding Mixing} y el \textit{Backward Mixing} son inversos, si prestamos atención veremos que en el \textit{Forwarding Mixing} obtenemos:
+\begin{itemize}
+	\item $A_{i+1} = B_i \oplus S_0[A_i]$
+	\item $B_{i+1} = C_i + S_0[A_i >>> 16]$
+	\item $C_{i+1} = D_i \oplus S_1[A_i >>> 24]$
+	\item $D_{i+1} = (A_i >>> 24) + E_i$, siendo $E_i$ igual a $B_i$, a $D_i$ o a 0 en función de la ronda que estemos.
+\end{itemize}
+
+Si observamos ahora \textit{Backward Mixing}, tenemos que:
+\begin{itemize}
+	\item $A_{i-1} = B_i \oplus S_1[A_i - E_i]$
+	\item $B_{i-1} = C_i - S_0[(A_i - E_i) <<< 8]$
+	\item $C_{i-1} = (D_i - S_1[(A_i - E_i) >>> 24]) \oplus S_0[(A_i - E_i) <<< 24]$
+	\item $D_{i-1} = (A_i - E_i) <<< 24$
+\end{itemize}
+
+Empezando por la $D$, claramente vemos que si tomamos las funciones que generan $D_{i+1}$ y $D_{i-1}$ con parámetros $A$, al aplicar $D_{i-1} \circ D_{i+1}$ obtenemos la identidad. También observemos que $A_i >>> 16$ para el \textit{Forwarding Mixing} equivale a $(A_i - E_i) <<< 8$ para el \textit{Backwardin Mixing} pues tenemos que $D_{i+1} = (A_i >>> 24) + E_i$ que al componerla en $(A_i - E_i) <<< 8 \Rightarrow A_i >>> 16$, de lo que se deduce que $B_{i+1}$ y $B_{i-1}$ son transformaciones inversas. Análogamente, se podrían comprobar las otras dos restantes.
+
+Por todo lo anterior, no es de extrañar que la comunidad quedase sorprendida al ver que un algoritmo tan rebuscado había logrado pasar a la final. Sin embargo, el mérito de esto reside fundamentalmente en su fortaleza frente al criptoanálisis.
+
+\subsection{Criptoanálisis}
+La fortaleza de este sistema criptográfico radica en la amplia variedad de operaciones \cite{MARS_AES} existentes en su algoritmo, así como la utilización de forma concatenada que rompe con la linealidad intrínseca de las mismas. Además, cuenta con una gran $S-box$ que favorece el efecto de la confusión del algoritmo a costa de recursos de ejecución, pues hay que mantenerla en memoria principal. A pesar de disponer de tamaño de clave superior a 256 bits, no se espera conseguir una mejora en seguridad sustanciosa más allá de este valor.
+
+Para los ataques lineales, se ha logrado demostrar que las transformaciones realizadas para incluir la clave en el criptograma, requieren de $2^{178}$ parejas elegidas, haciendo asi inviable este ataque. Por su parte, en el análisis diferencial, el número asciende hasta $2^{240}$ siguiendo un algoritmo heurístico de búsqueda de características presentado por los autores pero lo reducen a $2^{156}$ en el peor caso, siendo aún así suficiente.
+
+La mayor parte de las operaciones pueden ser simuladas de forma muy eficiente en las arquitecturas hardware contemporáneas, lo que hace que \textit{MARS} pueda permitirse tantas rondas sin suponer un tiempo de cálculo excesivo. Por el contrario, las multiplicaciones bajan el rendimiento del sistema criptográfico, reduciendo asi su velocidad de ejecución tanto en hardware como en software.
+\cite{MARS_Alg}\cite{MARS_AES}.
+
+\section{Twofish}
+\label{sec:Twofish}
+El sistema criptográfico \textit{TwoFish} evolucionó desde el algoritmo \textit{Blowfish}, que apareció para sustituir al \textit{DES} antes de la convocación del \textit{AES Contest}, con el que comparte diseñador, Bruce Schneider \cite{BlowfishWiki} al que se sumaron John Kelsey, Doug Whiting, David Wagner, Chris Hall y Niels Ferguson. Este sistema también se basó en redes de Feistel. Su principal característica está en las $S-Boxes$ dependientes de la clave.
+
+Cabe destacar que su fortaleza es una mejora de la herencia de su precursor, el cuál sigue resistiendo muy bien los ataques que se emplean sobre él por lo que, en contra de la opinión de su desarrollador, algunas empresas lo siguen manteniendo en lugar de mudarse a \textit{Twofish}. Su principal enfoque para este algoritmo radicó en la eficiencia del procesamiento así como la sencillez en las operaciones que utilizaba permitiendo así implementarse con facilidad en cualquier dispositivo con un rendimiento óptimo. \cite{TwoFish_AES}
+
+En base a su aplicación actual, el blog de su diseñador Bruce Schneider tiene un seguimiento relativamente activo\cite{TwoFish_Apps} de entre lo que cabe destacar su integración en \textit{Crypto++}\cite{Crypto}, \textit{PGP} y \textit{GnuGP}. También se puede observar que se ha implementado en varios lenguajes como Java, C\cite{Implementations} y Python. De forma más exotérica, algunos usuarios lo han escrito en Ruby, Go y Javascript.
+
+\subsection{Algoritmo}
+Como hemos destacado previamente, este algoritmo opta por la simplicidad de las operaciones, para lo cuál hace uso de instrucciones simples (suma, asignación, intercambio, rotación), dejando la robustez del encriptado a recursos como las $S-boxes$, la matriz de máxima distancia separable \textit{MSD} y una modificación de la transformación de Hadamard o Pseudo Transformación de Hadamard \textit{PHT}.
+
+El cálculo de las $S-boxes$ de cada ronda tiene en cuenta la clave de ronda, evitando que se produzca la misma caja con dos claves distintas, garantizando que se produzcan 4 $S-boxes$ completamente distintas para mejorar las características frente a ataques criptográficas lineales y diferenciales, y mejorando la eficiencia del algoritmo mediantes el pre-cálculo de las mismas. Este paso es fundamental para garantizar en el algoritmo la confusión.
+
+Las matrices de máxima distancia separable (\textit{Maximum Separable Distance}) se caracterizan porque, para 2 entradas diferentes $a$, $a'$ con sus salidas $b$ y $b'$, la suma de las diferencias entre $(a, b)$ y $(a', b')$ es de $n+1$ como mínimo con $n$ el rango de la matriz. Esto hace que este recurso sea la principalmente fuente de difusión de \textit{Twofish}.
+
+La pseudo transformación Hadamard (\textit{Pseudo-Hadamard Transform} o \textit{PHT}) consiste en realizar $a' = a + b \mod c$ y $b' = a + 2b \mod c$. Este simple truco permite incrementar aún más la difusión del algoritmo. \cite{TwoFish_AES}
+
+De esta forma, el algoritmo sería:
+
+\begin{algorithm}[H]
+	\begin{algorithmic}[1]
+		\REQUIRE \ \\
+			\texttt{$P$}, plaintext\\
+			\texttt{$A, B, C, D$}, plaintext dividido en 4 partes de 32 bits.\\
+	
+	\STATE{\texttt{$(A,B,C,D) = (A,B,C,D) \oplus (K[0],K[1],K[2],K[3])$}} %\textit{Key whitening} ???
+
+	\FOR{\texttt{$i = 1 \rightarrow 16$}}
+		\STATE{\texttt{$T_0 = g(A)$}, introducimos $A$ a la función $g$.} 
+		\STATE{\texttt{$T_1 = g(B <<< 8)$}, introducimos $B$ rotado a la función $g$.}
+		\STATE{\texttt{$F_0 = T_0 + T_1 + K_{2r+8} \mod 2^{32}$}, calculamos la salida de $f$.}
+		\STATE{\texttt{$F_1 = T_0 + 2T_1 + K_{2r+9} \mod 2^{32}$}, calculamos la salida de $f$.}
+		\STATE{\texttt{$(C, D) = (C \oplus F_0, D \oplus F_1)$}, Asignamos los nuevos valores a la parte derecha.}
+		\STATE{\texttt{$(A, B, C, D) = (C, D, A, B)$}, intercambiamos la parte derecha y la izquierda.}
+	\ENDFOR	
+
+	\STATE{\texttt{$(A,B,C,D) = (C , D , A, B)$}, deshacemos el último intercambio.}
+	\STATE{\texttt{$(A,B,C,D) = (A,B,C,D) \oplus (K[5],K[6],K[7],K[8])$}} %\textit{Key whitening} ???
+	\RETURN{\texttt{($A, B, C, D$)}}
+	\end{algorithmic}
+	\caption{Algoritmo de Twofish presentado al AES.}
+		\label{alg:Twofish}
+\end{algorithm}
+
+La función $g$ toma el argumento $X$, lo trocea en 4 partes $x_0$, $x_1$, $x_2$, $x_3$ de 8 bits, hace que cada una pase por una $S-box$ $s_i$ dependiente de la clave y la ronda, y después se le aplica la matriz de máxima distancia separable. Para simplificar el cálculo de esta matriz, se toma los valores $y_i$ como un vector sobre el cuerpo $\textit{GF}(2^8) = \textit{GF}(2)[x]/(x^8+x^6+x^5+x^3+1)$ y se opera como se hacía con los exponentes como hacíamos con \textit{Rijndael}.
+
+Si llamamos $y_i = s_i (x_i)$ a la salida de las $S-boxes$, y $z_i$ a la salida de la función $g$ tenemos que:
+
+$$\begin{bmatrix}
+z_0 \\
+z_1 \\
+z_2 \\
+z_3 \\
+\end{bmatrix} =
+MDS \cdot
+\begin{bmatrix}
+y_0 \\
+y_1 \\
+y_2 \\
+y_3 \\
+\end{bmatrix} \qquad \text{ siendo MDS = }
+\begin{bmatrix}
+01 & EF & 5B & 5B \\
+5B & EF & EF & 01 \\
+EF & 5B & 01 & EF \\
+EF & 01 & EF & 5B \\
+\end{bmatrix}$$
+
+Como se puede intuir, los valores de la matriz $MDS$ utilizada están expresados en hexadecimal.
+
+\subsection{Criptoanálisis}
+A pesar de que el algoritmo no fue concebido para tener una fortaleza sorprendente frente al criptoanálisis como fue el caso de \textit{Serpent}, \textit{Twofish} se ha logrado afianzar como un algoritmo muy resistente debido principalmente a su matriz MDS y a sus $S-boxes$ dependientes de la clave.
+
+Para los ataques de criptoanálisis lineal, \textit{Twofish} ha sido atacado mediante heurísticas sobre una versión de 12 rondas en la que se encontraba un ciclo en las $S-boxes$ para un subconjunto de las claves (que se consideran por ello claves débiles) en el cuál el número de parejas texto-criptograma necesario baja de $2^120$ a $2^89$, haciendo de esta manera vulnerable también a la versión de 16 rondas. Dado que este subconjunto de claves es pequeño comparado con el total, se puede tomar la medida de comprobar que la clave generada no pertenece a este subconjunto como se hacía con las claves débiles de \textit{DES}.
+
+Al pasar a analizar el algoritmo completo de \textit{Twofish}, nos encontramos que la mejor heurística para 12 rondas encontrada sin claves débiles necesitaría $2^149$ parejas de texto-criptograma con \textit{Twofish}. Esta cantidad, si bien no es algo extraordinario, es superior a la cantidad que se necesitarían para trabajar con fuerza bruta, haciendo así inviable un ataque de estas características.
+
+Por otra parte, se han realizado diversos ataques diferenciales sobre versiones reducidas de \textit{Twofish} consiguiendo el mejor resultado para 5 rondas con $2^{22,5}$ parejas de texto-criptograma escogidas y mucho cómputo sobre ellas. Al intentar ampliar esta técnica hasta las 7 rondas, la carga de trabajo se duplica por lo que se considera intratable para abordar el algortimo completo (recordemos que éste tiene 16 rondas).
+
+La técnica consiste en buscar un par de parejas de forma que su diferencia al cabo de las 5 rondas siga un patrón determinado. Después, hallada este par, podemos construir hasta 2048 con las cuáles establecer un sistema de ecuaciones con 2048 ecuaciones y 2048 incógnitas que resolveremos usando técnicas estándar de álgebra lineal sobre el cuerpo finito $\textit{GF}(2^8)$ definido anteriormente. Si el sistema es irresoluble, el par original no era válido y debemos buscar otro.
+
+Tras resolver el sistema de ecuaciones, obtendremos información sobre las $S-boxes$ que nos permitirá sacar parcialmente las claves de ronda y la clave usada. Mediante fuerza bruta se termina de sacar la clave \cite{TwoFish_AES}.
+
+\section{RC6}
+\label{sec:RC6}
+
+El sistema criptográfico \textit{RC6} fue desarrollado por Ron Rivest (desarrollador también de toda la familia $"$RC$"$ \footnote{La familia $"$RC$"$ es conocida como \textit{Rivest Ciphers} o \textit{Ron Codes} y, a pesar de componerse de 6 miembros numerados, \textit{RC1} y \textit{RC3} rara vez se tienen en cuenta. \textit{RC1} nunca fue publicado oficialmente y \textit{RC3} fue roto antes de llegar a usarse. \cite{RC6_Family}} y del protocolo \textit{RSA}), Matt Robshaw, Ray Sidney y Yiqun Lisa Yin. Una particularidad de este algoritmo es el uso de la técnica de rotación de dígitos variando un número dependiente del \textit{plaintext} en lugar del uso de tablas de sustitución como vimos en algunos de los anteriores. Sin embargo, destaca principalmente por su simplicidad y rapidez de ejecución especialmente en las plataformas que soportan eficientemente las operaciones de multiplicación y rotación que necesita. \cite{AES_Round1}
+
+Inicialmente, se intentó presentar a su predecesor, el algoritmo \textit{RC5} que ya fue implementado con el objetivo de sustituir al \textit{DES} pero no cumplía los estándares exigidos por el \textit{AES process}. Por tanto, \textit{RC6} se desarrolló como una adaptación del mismo bajo los nuevos requisitos y, adicionalmente, para resistir a una serie de ataques teóricos encontrados en diferentes estudios del algoritmo. La filosofía de diseño de ambos algoritmos es la explotación de las operaciones más eficientes implementadas en los procesadores modernos, como la multiplicación de enteros (exclusiva al \textit{RC6}) y las rotaciones. \cite{RC6_AES}
+
+\subsection{Algoritmo}
+Este algoritmo tiene varias particularidades que necesitan ser explicadas: \cite{RC6_AES}
+\begin{itemize}
+	\item Recibe como parámetros el tamaño de palabra ($w$), el número de rondas ($r$) y el tamaño de la clave ($b$) pero para su presentación al \textit{AES process} sus posibles valores se restringieron. En particular: $w = 32$ para funcionar en arquitecturas de 32 y 64 bits sin modificarse, $r = 20$ buscando un equilibrio entre seguridad y eficiencia, y $b$ podía valer 128, 192 ó 256.
+	
+	\item La división en partes de la entrada (y posteriormente la formación de la salida) pasa el primer bit al bit menos significativo del primer registro y el último bit al bit más significativo del último registro\footnote{Para ilustrar la explicación, si tomamos el mensaje $0x0123 = 0000\ 0001\ 0010\ 0011$ y lo dividimos en los registros de 4 bits $A, B, C, D$ de la forma explicada, tendríamos $[A,B,C,D] = [0000, 1000, 0100, 1100]$ o visto de otra forma $[D, C, B, A] = [1100, 0100, 1000, 0000]$, esto sería, el mensaje al revés partido en 4 bloques de la manera tradicional. Análogamente, se comprueba que a partir de $[A,B,C,D] = [0000, 1000, 0100, 1100]$, se formaría el mensaje de salida $0x0123 = 0000\ 0001\ 0010\ 0011$ si volvemos a aplicar los mismos criterios: bit menos significativo de $A$ al primer bit de la salida y bit más significativo de $D$ al último bit de la salida.}.
+
+	\item Al hacer uso continuamente de la suma y la multiplicación, los valores pueden salirse del tamaño de los registros\footnote{El tamaño del registro es de 1 palabra para agilizar las operaciones.}, por lo que se sustituyen dichas operaciones por suma y multipliación con módulo base $2^{w}$.
+
+	\item Las rotaciones tiene un limitador para mejorar la eficiencia.
+	
+	Literalmente, se presentan las rotaciones a la derecha (análogamente a la izquierda) como: \texttt{la operación $a \ggg b$ rotará a la derecha la variable $a$ la cantidad dada por los $\log_2 w$ bits menos significativos de $b$}.
+	
+	Sabemos que $w$ es el tamaño de palabra, por lo que podemos ver que \texttt{tomar los $\log_2 w$ bits} de una variable es equivalente a hacerle módulo base $w$.
+	
+	En otras palabras, este limitador impide dar más de $w-1$ vueltas de $a$, mejorando así la eficiencia de las rotaciones\footnote{Para comprender estas conclusiones necesitamos:
+	\begin{itemize}
+		\item Tener en cuenta que estas operaciones se aplican sobre variables de tamaño $w$.
+		\item Recordar que el tamaño de palabra de una arquitectura ($w$) siempre es una potencia de 2, es decir, $\log_2 w$ será un número entero.
+		\item Entender que aplicar $w$ rotaciones a una variable $a$, es completar una vuelta a la variable, es decir, no alterará el valor de la variable y consume tiempo de ejecución. Por eso, al realizar antes el módulo obtenemos el mismo resultado pero consumiendo menos tiempo de ejecución (o el mismo si inicialmente $0 \leq b < w$).
+	\end{itemize}}.
+\end{itemize}
+
+\begin{algorithm}[H]
+	\begin{algorithmic}[1]
+		\small
+		\REQUIRE \ \\
+			\texttt{$A, B, C, D$}, plaintext dividido en 4 partes de 32 bits de la forma explicada\\
+			\texttt{$r = 20$}, rondas del bucle, constante para el \textit{AES process} \\
+			\texttt{$K [0, \dots, 2r + 3]$}, claves de ronda de 32 bits\\
+		
+		\STATE{\texttt{$(B,D) = (B,D) + (K[0],K[1])$}} %\textit{Key whitening} ???
+		
+		\FOR{\texttt{$i = 1 \rightarrow r$}}
+			\STATE{\texttt{$t = (B \times (2B + 1)) <<< \log_2 w$}, valor de rotación dependiente del \textit{plaintext}.} 
+			\STATE{\texttt{$u = (D \times (2D + 1)) <<< \log_2 w$}, valor de rotación dependiente del \textit{plaintext}.}
+			\STATE{\texttt{$A = ((A \oplus t) <<< u) + K[2i]$}, calculamos el nuevo A}
+			\STATE{\texttt{$C = ((C \oplus u) <<< t) + K[2i + 1]$}, calculamos el nuevo C}
+			\STATE{\texttt{$(A, B, C, D) = (B, C, D, A)$}, reubicamos}
+		\ENDFOR
+		
+		\STATE{\texttt{$(A,C) = (A,C) - (K[2r + 2],K[2r + 3])$}} %\textit{Key whitening} ???
+		\RETURN{\texttt{($A, B, C, D$)}}
+	\end{algorithmic}
+
+	\caption{Algoritmo de RC6 presentado al AES.}
+	\label{alg:RC6}
+\end{algorithm}
+
+
+\subsection{Criptoanálisis}
+	Dada su estrecha relación con su predecesor (\textit{RC5}) y la fortaleza que éste presentó durante los años que estuvo en activo antes del \textit{AES process} (1994-1997), cabría esperar una fortaleza similar en \textit{RC6}. \cite{RC6_Crypt}
+	
+	Para analizarla, trataremos de aplicarle distintas técnicas a 4 variantes del algoritmo, que se diferenciarán en su inclusión o no del uso de la función cuadrática y de las rotaciones fijas, a las que llamaremos:
+	\begin{itemize}
+		\item \textit{RC6-I-NFR}: la versión más simple del algoritmo, que substituye la función cuadrática por la identidad y no realiza una rotación fija sobre el parámetro $u$ ni el $t$.
+		\item \textit{RC6-I}: una versión algo más compleja, que implementa la rotación fija pero mantiene la identidad.
+		\item \textit{RC6-NFR}: otra versión intermedia, pero esta vez implementando la función cuadrática y dejando de lado la rotación fija.
+		\item \textit{RC6}: el algoritmo completo que se presentó al \textit{AES process}.
+	\end{itemize}
+
+	Al analizarlas por separado pretendemos aliviar la complejidad de los cálculos a la vez que garantizamos la robustidad del algoritmo. Esto es, si para determinados ataques logramos demostrar que una de las variantes más sencillas es suficientemente segura, tendremos demostrado que las variantes más complejas lo son con un menor esfuerzo.
+	
+	Para el criptoanálisis lineal, se toman dos vías, la aproximación de la rotación dependiente de los datos cuya estructura simplifican como $A = B << C$ mediante fórmulas tipo I (de la forma $A \cdot a = B \cdot b \oplus C \cdot c$) y tipo II (de la forma $A \cdot a = B \cdot b$) donde se toman $a, b, c \in \{0, 1\}^{32}$ como el conjunto de bits que establecerán la relación lineal.
+	
+	Para la aproximación tipo I, tenemos que 16 rondas podrían dar suficiente seguridad pero con un margen muy bajo, por lo que se prefiere utilizar 20 rondas pues serían necesarias $2^{155}$ parejas de texto-criptograma para romperlo. Además, este valor se mantiene tanto para \textit{RC6} como para sus variantes más sencillas (\textit{RC6-I-NFR}, \textit{RC6-I} y \textit{RC6-NFR}). Por otra parte, la aproximación tipo II, mantiene una fortaleza similar para \textit{RC6-I-NFR} y \textit{RC6-NFR} pues existe una aproximación lineal muy buena para los bits menos significativos (en particular, $y \cdot e_0 = x \cdot e_0$ se mantiene con probabilidad 1) pero esta fortaleza se incrementa muchos más con \textit{RC6-I} y \textit{RC6} pues las rotaciones fijas fuerzan a desplazar el foco de los bits menos significativos, logrando así que sean necesarias $2^{302}$ ($2^{192}$ para \textit{RC6-I}) parejas para romperlo. De esta forma, se ve que \textit{RC6} es más resistente a ataques de tipo II pero igualmente muy resistente a los de tipo I
+	
+	Para el criptoanálisis diferencial, descubrimos que (tomando una diferencia genérica $\Delta$ y dependiendo si aparece en A, B, C y/o D) podemos establecer ciclos de 3 ó 6 donde la estructura diferencial se mantendrá con una cierta probabilidad, lo que se conoce como ataque por diferenciales iterativos. En el caso de \textit{RC6-I-NFR} y \textit{RC6-I} es de $2^{-22}$, haciendo que sean necesarias 38 rondas para lograr una resistencia suficientemente alta. Mientras que, \textit{RC6-NFR} consigue reducir dicha probabilidad a $2^{-30}$ y a 30 rondas.
+		
+	Por último, al mezclar tanto las rotaciones fijas como la función cuadrática, la probabilidad de mantenerse con los diferenciales iterativos vistos anteriormente, se reduce drásticamente hasta $2^{-91}$ dando así lugar a una fortaleza de $2^{-279}$ con tan solo 20 rondas. Incluso con un ataque más personalizado se consigue mantener una baja probabilidad de $2^{-239}$.
